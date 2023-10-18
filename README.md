@@ -6,6 +6,9 @@ Lý do sử dụng asyncio with non-blocking socket `socket.setblocking(flag=Fal
 - Asyncio sử dụng non-blocking socket, nghĩa là khi có nhiều kết nối đến, nó sẽ chuyển đổi giữa các kết nối đó, không cần phải chờ kết nối trước đó hoàn thành
 - Và trên server các tác vụ chỉ là điều kiển một đối tượng duy nhất là Deep Learning Model, và các kết nối đến từ Clients để giám sát nó (nghĩa là không phát sinh thêm các hành động độc lập khác ở mỗi kết nối mới được thiết lập) nên không cần phải sử dụng nhiều thread. 
 
+## Response Error
+- `CodeError`: 41(0x29) - `Error`: 0x29 - `Message`: `Invalid request code`(Command is not understanding) or Many request with same code
+- `CodeError`: 42(0x2A) - `Error`: 0x2A - `Message`: `Invalid JSON format``
 ---
 ### Citations
 [GITHUB](https://github.com/DevStarSJ/Study/blob/master/Blog/Python/Socket/02.chat.md)
