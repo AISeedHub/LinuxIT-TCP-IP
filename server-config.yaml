@@ -1,0 +1,22 @@
+PORT: 9090
+BUFFER_SIZE: 1024
+ENCODING: utf-8
+MAX_CONNECTIONS: 5
+
+COMMAND:
+  0x01: start
+  0x02: resume
+  0x03: suspend
+  0x04: stop
+  0x11: request_detective
+  0x12: response_detective
+  0x13: request_device_change
+  0x14: response_device_change
+  0x15: request_model_change
+  0x16: response_model_change
+  0x17: request_model_name
+  0x18: response_model_name
+  0x19: request_model_delete
+  0x1A: response_model_delete
+  0x1B: request_download
+  0x1C: response_download
