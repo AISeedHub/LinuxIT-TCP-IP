@@ -49,3 +49,14 @@ def get_ip_address():
         print("Cannot get the local IP address")
         print("Using the default IP address: 127.0.0.1")
         return "127.0.0.1"
+
+
+def validate_task(data, valid_cmd):
+    # check format of data
+    json_data = convert_str_to_dict(data)
+    print("parse:", json_data)
+    command_type = json_data["cmd"]
+    # check command type
+    task_str = valid_cmd[command_type]
+    task_func = eval(task_str)
+    return task_func, json_data
