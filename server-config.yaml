@@ -4,19 +4,18 @@ ENCODING: utf-8
 MAX_CONNECTIONS: 5
 
 COMMAND:
-  0x01: start
-  0x02: resume
-  0x03: suspend
-  0x04: stop
-  0x11: request_detective
-  0x12: response_detective
-  0x13: request_device_change
-  0x14: response_device_change
-  0x15: request_model_change
-  0x16: response_model_change
-  0x17: request_model_name
-  0x18: response_model_name
-  0x19: request_model_delete
-  0x1A: response_model_delete
-  0x1B: request_download
-  0x1C: response_download
+  0x01: request_classification
+  0x02: response_classification
+  0x03: stop_classification
+  0x04: request_download
+  0x05: response_download
+  0x06: request_model_select
+  0x07: response_model_select
+  0x08: request_current_model
+  0x09: response_current_model
+  0x10: request_model_change
+  0x11: response_model_change
+  0x12: request_model_delete
+  0x13: response_model_delete
+  0x28: close_connection
+  0x29: error_message
