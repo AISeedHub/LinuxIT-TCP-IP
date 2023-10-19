@@ -77,7 +77,7 @@ class Server(object):
     def __init__(self, manager):
         self.selector = selectors.DefaultSelector()
         self._taskManager = manager
-        self.loop = manager.loop  # Event loops schedules and manages tasks
+        # self.loop = manager.loop  # Event loops schedules and manages tasks
         self._config = manager.config
         # Set up the server
         self._serv_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
