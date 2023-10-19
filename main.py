@@ -5,7 +5,7 @@ from utils import *
 
 def run_server(cnf):
     loop = get_event_loop()
-    manager = Manager(cnf, loop)
+    manager = Manager(cnf)
     manager.start_server()
     # Run loop
     loop.run_forever()

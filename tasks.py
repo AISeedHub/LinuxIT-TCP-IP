@@ -12,7 +12,7 @@ class Manager:
     - Manager class should be initial when the server starts
     """
 
-    def __init__(self, cnf, loop):
+    def __init__(self, cnf):
         self.cmd = cnf["COMMAND"].keys()
         self.config = cnf
         self.server = None  # TCP-IP server
@@ -36,4 +36,4 @@ class Manager:
         finally:
             # response to client
             print("Distribute Task Done")
-            return response
+            return json.dumps(response)
