@@ -1,6 +1,5 @@
-# from asyncio import Task, get_event_loop
+from model import DLModel
 from tcpip import Server
-import time
 from utils import *
 from emit import *
 
@@ -17,6 +16,7 @@ class Manager:
         self.config = cnf
         self.server = None  # TCP-IP server
         self.command_codes = {value: key for key, value in self.config["COMMAND"].items()}
+        self.dl_model = DLModel(self.config["DIR_MODEL_PREPROCESSING"])
 
     def start_server(self):
         self.server = Server(self)
@@ -28,7 +28,8 @@ class Manager:
                     "result": ""}
         try:
             task_func, json_data = validate_task(data, self.config["COMMAND"])
-            task_func(self.command_codes, response, json_data)
+            raw_data_request = json_data["request_data"]
+            task_func(self, response, json_data)
 
         except Exception as e:
             print(f"Error handling request: {e}")

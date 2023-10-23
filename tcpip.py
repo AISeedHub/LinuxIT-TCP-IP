@@ -1,5 +1,3 @@
-# from socket import socket, SO_REUSEADDR, SOL_SOCKET
-# from asyncio import Task, coroutine
 import selectors
 import socket
 
@@ -69,7 +67,7 @@ class Peer(object):
             self._server.broadcast(json_response)
         else:
             print("Connection closed by client")
-            # self._server.remove(self)
+            self._server.remove(self)
             # break
 
 
@@ -139,12 +137,15 @@ class Server(object):
         # return Task(self.input_peers_info(), name="input_peers_info")
 
     def remove(self, peer):
-        print("Removing peer... ", peer.name)
-        print("Bye bye %s" % peer.name)
-        self.broadcast('Peer %s quit!\n' % peer.name)
-        self.peer._sock.close()
-        print(f"Connection with {self.name} closed.")
+        self.selector.unregister(peer._sock)
+        peer._sock.close()
         self._peers.remove(peer)
+        # print("Removing peer... ", peer.name)
+        # print("Bye bye %s" % peer.name)
+        # self.broadcast('Peer %s quit!\n' % peer.name)
+        # self.peer._sock.close()
+        # print(f"Connection with {self.name} closed.")
+        # self._peers.remove(peer)
 
     def broadcast(self, message):
         print("Broadcasting message...")
