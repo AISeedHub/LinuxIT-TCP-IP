@@ -1,5 +1,5 @@
 from model import DLModel
-from utils import inference
+# from utils import inference
 
 def stop_classification(task_manager, response, raw_request):
     print("stop_classification")
@@ -8,7 +8,7 @@ def stop_classification(task_manager, response, raw_request):
 
 def stop_response(task_manager, response):
     print("response_classification")
-    func_str = response_classification.__name__
+    func_str = stop_response.__name__
     response["cmd"] = task_manager[func_str]
     response["result"] = 2
 
