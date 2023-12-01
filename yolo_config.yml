@@ -1,0 +1,2 @@
+model_path: 'weights\best.pt'
+classes: ['burn_bbox', 'defected_pear', 'defected_pear_bbox', 'normal_pear', 'normal_pear_bbox']
