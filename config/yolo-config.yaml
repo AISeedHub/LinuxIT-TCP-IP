@@ -1,0 +1,3 @@
+weight_url: 'https://github.com/AISeedHub/pretrained-models/releases/download/PearDetection/best.pt'
+model_name: 'best.pt'
+classes: ['burn_bbox', 'defected_pear', 'defected_pear_bbox', 'normal_pear', 'normal_pear_bbox']

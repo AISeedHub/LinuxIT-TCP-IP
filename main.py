@@ -13,5 +13,8 @@ def run_server(cnf):
 
 if __name__ == '__main__':
     # load the configuration
-    config = load_config()
+    server_config = load_server_config()
+    model_config = load_model_config()
+    # combine the two configurations
+    config = {**server_config, **model_config}
     run_server(config)
