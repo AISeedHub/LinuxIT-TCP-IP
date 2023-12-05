@@ -1,86 +1,122 @@
-from model import DLModel
-from utils import inference
+from model import PearDetectionModel
 
-def stop_classification(task_manager, response, raw_request):
+
+def response_structure():
+    return {
+        "file_name": None,
+        "result": None,
+        "error_code": 0
+    }
+
+
+def request_classification(task_manager, request_data):
+    """
+    expected input request_data = ["001.jpg","002.jpg","003.jpg"]
+    """
+    print("request_classification")
+    response_data = []
+    for file_name in request_data:
+        response_element = response_structure()
+        response_element["file_name"] = file_name
+        result = task_manager.dl_model.inference(file_name)
+        if result is -1:
+            response_element["error_code"] = 1
+        else:
+            response_element["result"] = result
+        response_data.append(response_element)
+    return response_data
+
+
+def stop_classification(task_manager, request_data):
+    """
+    expected input request_data = None
+    """
     print("stop_classification")
     task_manager.dl_model.ease_model()
-    return stop_response(task_manager, response)
-
-def stop_response(task_manager, response):
-    print("response_classification")
-    func_str = response_classification.__name__
-    response["cmd"] = task_manager[func_str]
-    response["result"] = 2
+    response_element = response_structure()
+    response_element["result"] = 2
+    return [response_element]
 
 
-def request_classification(task_manager, response, raw_request):
-    print("request_classification")
-    # Classification result is returned here
-    raw_data_directory =  raw_request
-    response["result"] = task_manager.dl_model.inference(raw_data_directory)
-    if response["result"] is -1:
-        raise Exception
-    return response_classification(task_manager, response)
-
-
-def response_classification(task_manager, response):
-    print("response_classification")
-    func_str = response_classification.__name__
-    response["cmd"] = task_manager[func_str]
-
-
-def request_download(task_manager, response, raw_request):
+def request_download(task_manager, request_data):
+    """
+    expected input request_data = ["URL"]
+    """
     print("request_download")
     # TODO: copy or download?
-    response["result"] = 1
-    return response_download(task_manager, response)
-
-
-def response_download(task_manager, response):
-    print("response_download")
-    func_str = response_download.__name__
-    response["cmd"] = task_manager[func_str]
-
-
-def request_model_select(task_manager, response, raw_request):
-    print("request_model_select")
-    model_name = raw_request
+    response_element = response_structure()
+    import wget
     try:
-        task_manager.dl_model.set_model_name(model_name)
-        response["result"] = 2
-    except Exception as e:
-        print(f"Error handling request: {e}")
-        response["result"] = 1
-    finally:
-        response_model_select(task_manager, response)
+        wget.download(request_data[0], out=task_manager.config["DIR_MODEL_DETECTION"])
+        response_element["result"] = 2  # success
+    except:
+        response_element["result"] = 1
+    return [response_element]
 
 
-def response_model_select(task_manager, response):
-    print("response_model_select")
-    func_str = response_model_select.__name__
-    response["cmd"] = task_manager[func_str]
+def request_model_select(task_manager, request_data):
+    """
+    expected input request_data = ["model1.pt"]
+    """
+    print("request_model_select")
+    response_element = response_structure()
+    response_element["file_name"] = request_data[0]
+    try:
+        task_manager.dl_model.set_model_name(request_data[0])
+        response_element["result"] = 2
+    except:
+        response_element["result"] = 1
+        response_element["error_code"] = 2  # no file
+    return [response_element]
 
 
-def request_current_model(task_manager, response, raw_request):
+def request_current_model(task_manager, request_data):
+    """
+    expected input request_data = null
+    """
     print("request_current_model")
-    response["result"] = task_manager.dl_model.model_name
-    return response_current_model(task_manager, response)
+    response_element = response_structure()
+    response_element["result"] = task_manager.dl_model.model_name
+    return [response_element]
 
 
-def response_current_model(task_manager, response):
-    print("response_current_model")
-    func_str = response_current_model.__name__
-    response["cmd"] = task_manager[func_str]
+def request_list_model(task_manager, request_data):
+    """
+    expected input request_data = null
+    """
+    print("request_list_model")
+    # check the list file in dir_model_detection
+    import os
+    try:
+        list_file = os.listdir(task_manager.config["DIR_MODEL_DETECTION"])
+    except:
+        list_file = []
+    if len(list_file) is 0:  # no files
+        response_element = response_structure()
+        response_element["result"] = 1
+        response_element["error_code"] = 2
+        return [response_element]
+    response_data = []
+    for file_name in list_file:
+        response_element = response_structure()
+        response_element["file_name"] = file_name
+        response_element["result"] = 2
+        response_data.append(response_element)
+    return response_data
 
 
-def request_model_delete(task_manager, response, raw_request):
+def request_model_delete(task_manager, request_data):
+    """
+    expected input request_data = ["model1.pt"]
+    """
     print("request_model_delete")
-    # TODO: delete model file or change model_name
-    response["result"] = 1
-    return response_model_delete(task_manager, response)
-
-
-def response_model_delete(task_manager, response):
-    print("response_model_delete")
-    func_str = response_model_delete.__name__
-    response["cmd"] = task_manager[func_str]
+    response_element = response_structure()
+    response_element["file_name"] = request_data[0]
+    import os
+    try:
+        os.remove(task_manager.config["DIR_MODEL_DETECTION"] + "/" + request_data[0])
+        response_element["result"] = 2
+    except:
+        response_element["result"] = 1
+        response_element["error_code"] = 2  # no file
+    return [response_element]
