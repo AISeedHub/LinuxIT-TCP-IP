@@ -1,0 +1,43 @@
+PORT: 9090
+BUFFER_SIZE: 1024
+ENCODING: utf-8
+MAX_CONNECTIONS: 5
+DIR_MODEL_DETECTION: "weights"
+DIR_IMG: "img"
+
+COMMAND:
+  0x01: request_classification
+  0x02: response_classification
+  0x03: stop_classification
+  0x04: stop_response
+  0x05: request_download
+  0x06: response_download
+  0x07: request_model_select
+  0x08: response_model_select
+  0x09: request_current_model
+  0x10: response_current_model
+  0x11: request_list_model
+  0x12: response_list_model
+  0x13: model_change_request
+  0x1A: model_change_response
+  0x1B: request_delete_model
+  0x1C: response_delete_model
+  0x28: close_connection
+  0x29: error_message
+
+CORRESPONDING_COMMAND:
+  0x01: 0x02
+  0x03: 0x04
+  0x05: 0x06
+  0x07: 0x08
+  0x09: 0x10
+  0x11: 0x12
+  0x13: 0x1A
+  0x1B: 0x1C
+
+ERROR_CODE:
+  no_error: 0
+  invalid_message: 1
+  resource_not_found: 2
+  not_exist_command: 3
+  timeout: 4
