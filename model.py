@@ -15,7 +15,6 @@ class PearDetectionModel:
 
         self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-        # self.__load_model(config['model_name']) # for testing
         self.names = config['classes']
 
     def set_model_name(self, model_name):
@@ -29,12 +28,9 @@ class PearDetectionModel:
 
     def _download_weight(self):  # for testing
         if os.path.exists(self.__dir_model_detection + '/' + config['model_name']) is False:
-            if os.path.exists(config['dir_model_detection']) is False:
-                os.mkdir(config['dir_model_detection'])
-            self.__dir_model_detection = self.__dir_model_detection + '/' + config['model_name']
-            torch.hub.download_url_to_file(config['weight_url'], dst=self.__dir_model_detection)
-        else:
-            self.__dir_model_detection = self.__dir_model_detection + '/' + config['model_name']
+            if os.path.exists(config['DIR_MODEL_DETECTION']) is False:
+                os.mkdir(config['DIR_MODEL_DETECTION'])
+            torch.hub.download_url_to_file(config['weight_url'], dst=self.__dir_model_detection + '/' + config['model_name'])
 
     def __load_img(self, img_path):
         return cv2.imread(self.__dir_img + "/" + img_path)
@@ -67,7 +63,7 @@ class PearDetectionModel:
 
 # for testing
 if __name__ == '__main__':
-    with open('config/yolo_config.yml', 'r') as f:
+    with open('config/yolo-config.yaml', 'r') as f:
         config = yaml.safe_load(f)
     config['DIR_MODEL_DETECTION'] = './weights'
     config['DIR_IMG'] = './img'
