@@ -3,3 +3,4 @@ onnxruntime
 opencv-python
 albumentations
 numpy
+wget

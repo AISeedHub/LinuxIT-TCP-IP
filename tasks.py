@@ -1,6 +1,6 @@
 from model import PearDetectionModel
 from tcpip import Server
-from utils import *
+from util import *
 from emit import *
 
 
@@ -34,7 +34,7 @@ class Manager:
             # Doing request task
             response_data = task_func(self, json_data["request_data"])
             # Generate response
-            response["cmd"] = self.config["CORRESPONDING_COMMAND"]
+            response["cmd"] = self.config["CORRESPONDING_COMMAND"][json_data["cmd"]]
             response["response_data"] = response_data
 
         except Exception as e:

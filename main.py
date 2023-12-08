@@ -1,6 +1,6 @@
 from asyncio import get_event_loop
 from tasks import Manager
-from utils import *
+from util import *
 
 
 def run_server(cnf):

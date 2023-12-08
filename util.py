@@ -10,7 +10,6 @@ def load_server_config():
     print("Loading the server's configuration file...")
     with open("config/server-config.yaml", "r") as f:
         config = yaml.safe_load(f)
-    config["IP"] = get_ip_address()
     return config
 
 
@@ -37,27 +36,27 @@ def convert_str_to_dict(data) -> dict:
     return json.loads(input_string)
 
 
-def get_ip_address():
-    """Get the owner ip address"""
-    print("Getting the local IP address...")
-    return "127.0.0.1"
-    try:
-        import socket
+# def get_ip_address():
+#     """Get the owner ip address"""
+#     print("Getting the local IP address...")
+#     # return "127.0.0.1"
+#     try:
+#         import socket
 
-        def get_local_ip():
-            hostname = socket.gethostname()
-            ip_address = socket.gethostbyname(hostname)
-            return ip_address
+#         def get_local_ip():
+#             hostname = socket.gethostname()
+#             ip_address = socket.gethostbyname(hostname)
+#             return ip_address
 
-        local_ip = get_local_ip()
-        print("Local IP address:", local_ip)
-        return local_ip
+#         local_ip = get_local_ip()
+#         print("Local IP address:", local_ip)
+#         return local_ip
 
-    except Exception as e:
-        print(e)
-        print("Cannot get the local IP address")
-        print("Using the default IP address: 127.0.0.1")
-        return "127.0.0.1"
+#     except Exception as e:
+#         print(e)
+#         print("Cannot get the local IP address")
+#         print("Using the default IP address: 127.0.0.1")
+#         return "127.0.0.1"
 
 
 def validate_task(data, valid_cmd):
