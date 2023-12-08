@@ -54,11 +54,11 @@ def request_download(task_manager, request_data):
     return [response_element]
 
 
-def request_model_select(task_manager, request_data):
+def model_change_request(task_manager, request_data):
     """
     expected input request_data = ["model1.pt"]
     """
-    print("request_model_select")
+    print("model_change_request")
     response_element = response_structure()
     response_element["file_name"] = request_data[0]
     try:
@@ -105,13 +105,18 @@ def request_list_model(task_manager, request_data):
     return response_data
 
 
-def request_model_delete(task_manager, request_data):
+def request_delete_model(task_manager, request_data):
     """
     expected input request_data = ["model1.pt"]
     """
     print("request_model_delete")
     response_element = response_structure()
     response_element["file_name"] = request_data[0]
+    if request_data[0] == task_manager.dl_model.model_name:
+        print("!!!! Client's trying to delete current DL model")
+        response_element["result"] = 1
+        response_element["error_code"] = 1
+        return [response_element]
     import os
     try:
         os.remove(task_manager.config["DIR_MODEL_DETECTION"] + "/" + request_data[0])
@@ -119,4 +124,28 @@ def request_model_delete(task_manager, request_data):
     except:
         response_element["result"] = 1
         response_element["error_code"] = 2  # no file
+    return [response_element]
+
+def request_change_img_folder(task_manager, request_data):
+    """
+    expected input request_data = ["/home/linux/img"]
+    """
+    print("request_change_img_folder")
+    response_element = response_structure()
+    response_element["file_name"] = request_data[0]
+    try:
+        task_manager.dl_model.set_dir_img(request_data[0])
+        response_element["result"] = 2
+    except:
+        response_element["result"] = 1
+        response_element["error_code"] = 2  # no file
+    return [response_element]
+
+def request_current_img_folder(task_manager, request_data):
+    """
+    expected input request_data = null
+    """
+    print("request_current_img_folder")
+    response_element = response_structure()
+    response_element["result"] = task_manager.dl_model.get_current_img_dir()
     return [response_element]
