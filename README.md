@@ -51,9 +51,9 @@ Distribute Task
 parse: {'cmd': 1, 'request_data': ['test.jpg', 'test1.jpg', 'test2.jpg']}
 request_classification
 Distribute Task Done
-json_response:  {"cmd": 2, "response_data": [{"file_name": "test.jpg", "result": 1, "error_code": 0}, {"file_name": "test1.jpg", "result": 0, "error_code": 0}, {"file_name": "test2.jpg", "result": 0, "error_code": 0}], "request_data": null}
+json_response:  {"cmd": 2, "response_data": [{"file_name": "test.jpg", "result": 5, "error_code": 0}, {"file_name": "test1.jpg", "result": 6, "error_code": 0}, {"file_name": "test2.jpg", "result": 6, "error_code": 0}]}
 Broadcasting message...
-----------> ('192.168.0.22', 64438) : "{"cmd": 2, "response_data": [{"file_name": "test.jpg", "result": 1, "error_code": 0}, {"file_name": "test1.jpg", "result": 0, "error_code": 0}, {"file_name": "test2.jpg", "result": 0, "error_code": 0}], "request_data": null}"
+----------> ('192.168.0.22', 64438) : "{"cmd": 2, "response_data": [{"file_name": "test.jpg", "result": 5, "error_code": 0}, {"file_name": "test1.jpg", "result": 6, "error_code": 0}, {"file_name": "test2.jpg", "result": 6, "error_code": 0}], "request_data": null}"
 Done sending
 ```
 
