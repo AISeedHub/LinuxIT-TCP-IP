@@ -20,9 +20,12 @@ def request_classification(task_manager, request_data):
         response_element["file_name"] = file_name
         result = task_manager.dl_model.inference(file_name)
         if result is -1:
-            response_element["error_code"] = 1
-        else:
-            response_element["result"] = result
+            response_element["error_code"] = 2  # no file
+            response_element["result"] = 4
+        elif result is 0:
+            response_element["result"] = 6  # defective pear
+        elif result is 1:
+            response_element["result"] = 5  # normal pear
         response_data.append(response_element)
     return response_data
 
@@ -126,6 +129,7 @@ def request_delete_model(task_manager, request_data):
         response_element["error_code"] = 2  # no file
     return [response_element]
 
+
 def request_change_img_folder(task_manager, request_data):
     """
     expected input request_data = ["/home/linux/img"]
@@ -140,6 +144,7 @@ def request_change_img_folder(task_manager, request_data):
         response_element["result"] = 1
         response_element["error_code"] = 2  # no file
     return [response_element]
+
 
 def request_current_img_folder(task_manager, request_data):
     """
