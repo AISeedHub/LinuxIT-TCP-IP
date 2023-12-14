@@ -57,8 +57,8 @@ class Peer(object):
                 self.selector.unregister(self._sock)
                 self._sock.close()
                 self._server._peers.remove(self)
-            else:
-                self.broadcast(data)
+            # else:
+            #     self.broadcast(data)
 
             print(message)
             json_response = self._taskManager.distribute_task(data)
