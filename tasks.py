@@ -51,4 +51,5 @@ class Manager:
         finally:
             # response to client
             print("Distribute Task Done")
+            print(response)
             return json.dumps(response)

@@ -2,6 +2,7 @@ import os
 import cv2
 import torch
 import yaml
+from ultralytics import YOLO
 
 
 class PearDetectionModel:
@@ -32,7 +33,7 @@ class PearDetectionModel:
 
     def __load_model(self, model_name):
         print(self.__dir_model_detection + '/' + model_name)
-        model = torch.hub.load('ultralytics/yolov5', 'custom', path=self.__dir_model_detection + '/' + model_name)
+        model = YOLO(self.__dir_model_detection + '/' + model_name, task="detect")
         model.to(self.device)
         print("Loaded model successfully")
         return model
@@ -57,8 +58,15 @@ class PearDetectionModel:
         except:
             return -1  # no img file
         pred = self.detect(img)
-        labels = [self.names[int(cat)] for _, _, _, _, _, cat in pred]
-        if 'normal_pear_bbox' in labels:
+
+        pred = (
+            pred[pred.conf > 0.9]
+            if all([pred != "burn_bbox" for pred in self.names])
+            else pred[pred.conf > 0.7]
+        )
+        labels = [self.names[int(cat)] for cat in pred.cls]
+
+        if any([label == "burn_bbox" for label in labels]):
             return 1
         else:
             return 0

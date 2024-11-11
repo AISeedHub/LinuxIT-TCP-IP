@@ -23,9 +23,9 @@ def request_classification(task_manager, request_data):
             response_element["error_code"] = 2  # no file
             response_element["result"] = 4
         elif result is 0:
-            response_element["result"] = 6  # defective pear
+            response_element["result"] = 0  # defective pear
         elif result is 1:
-            response_element["result"] = 5  # normal pear
+            response_element["result"] = 1  # normal pear
         response_data.append(response_element)
     return response_data
 
