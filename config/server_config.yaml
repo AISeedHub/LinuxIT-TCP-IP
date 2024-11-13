@@ -1,0 +1,31 @@
+# config/server_config.yaml
+server:
+  host: "0.0.0.0"
+  port: 9090
+  max_connections: 5
+  buffer_size: 1024
+  encoding: "utf-8"
+
+model:
+  model_path: "weights/best.pt"
+  img_path: "img"
+  confidence_threshold: 0.5
+  img_size: 640
+  classes:
+    - 'burn_bbox'
+    - 'defected_pear'
+    - 'defected_pear_bbox'
+    - 'normal_pear'
+    - 'normal_pear_bbox'
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/pear_detection.log"
+
+ERROR_CODE:
+  no_error: 0
+  invalid_message: 1
+  resource_not_found: 2
+  not_exist_command: 3
+  timeout: 4
