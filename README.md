@@ -3,58 +3,15 @@
 ```
 pip install -r requirements.txt
 ```
+- Pretrained model: `weights/`: [best.pt](https://github.com/user-attachments/files/17640870/best8n.zip)
 
 
-## Run the Application
+## How to run
 
-### Server:
-- Configurate server `config/server-config.yaml`
-+ `PORT` and `IP` must check carefully
-```yaml
-PORT: 9090
-IP: 192.168.0.40
-```
-- Run `python main.py` to start the Server service , expected output:
+- Run `python app.py` to start the Server service
+- Example of a request from the client:
 ```shell
-$ python main.py 
-Loading the server's configuration file...
-Loading the model's configuration file...
-weights/best.pt
-Using cache found in /home/linuxit/.cache/torch/hub/ultralytics_yolov5_master
-YOLOv5 🚀 2023-12-6 Python-3.9.18 torch-2.1.1+cu121 CUDA:0 (NVIDIA GeForce RTX 4070 Ti, 12007MiB)
-
-Fusing layers... 
-YOLOv5s summary: 157 layers, 7023610 parameters, 0 gradients, 15.8 GFLOPs
-Adding AutoShape... 
-Loaded model successfully
-Server Address: 192.168.0.40:9090
-Start the server...
-Waiting for connection...
-```
-### Client 
-- Establish connection to server:
-> In Server, expected output:
-```shell
-WELLCOME bro: (('192.168.0.22', 64438))
-Waiting for connection...
-```
-- Request server
-```
 {"cmd" : 0x01, "request_data": ["test.jpg", "test1.jpg", "test2.jpg"]}
-```
-
-> In Server, expected output:
-```shell
-Peer handler
-<----------- ('192.168.0.22', 64438): {"cmd" : 0x01, "request_data": ["test.jpg", "test1.jpg", "test2.jpg"]}
-Distribute Task
-parse: {'cmd': 1, 'request_data': ['test.jpg', 'test1.jpg', 'test2.jpg']}
-request_classification
-Distribute Task Done
-json_response:  {"cmd": 2, "response_data": [{"file_name": "test.jpg", "result": 5, "error_code": 0}, {"file_name": "test1.jpg", "result": 6, "error_code": 0}, {"file_name": "test2.jpg", "result": 6, "error_code": 0}]}
-Broadcasting message...
-----------> ('192.168.0.22', 64438) : "{"cmd": 2, "response_data": [{"file_name": "test.jpg", "result": 5, "error_code": 0}, {"file_name": "test1.jpg", "result": 6, "error_code": 0}, {"file_name": "test2.jpg", "result": 6, "error_code": 0}], "request_data": null}"
-Done sending
 ```
 
 ***
@@ -127,6 +84,33 @@ Expected Response:
 "{"cmd": 41, "response_data": [{"file_name": "best (1).pt", "result": 2, "error_code": 0}], "request_data": null}"
 ```
 
-##### @opyRight: AISeedCorp
+# Development Guide
+## 1. Directory Structure
+```
+pear_detection/
+├── src/
+│   ├── server/
+│   │   ├── tcp_server.py      # TCP server implementation
+│   │   ├── peer.py            # Connection handler
+│   │   └── connection_manager.py
+│   ├── handlers/
+│   │   ├── base_handler.py    # Abstract handler class
+│   │   ├── classification_handler.py
+│   │   ├── model_handler.py
+│   │   └── directory_handler.py
+│   ├── model/
+│   │   └── pear_detector.py   # ML model wrapper
+│   └── utils/
+│       ├── parsers.py         # Command parsing
+│       ├── validators.py      # Request validation
+│       └── exceptions.py      # Custom exceptions
+├── config/
+│   └── server_config.yaml     # Server configuration
+└── tests/
+    ├── test_server.py
+    ├── test_handlers.py
+    └── test_model.py
+```
 
-
+## 2. Command Processing Flow
+![Command Processing Flow](img/Command Processing Flow.png)
