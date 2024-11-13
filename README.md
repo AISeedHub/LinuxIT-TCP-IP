@@ -59,6 +59,9 @@ Done sending
 
 ***
 
+### Application using for testing (TCP Client)
+![hercules-app.png](img/hercules-app.png)
+
 ## Other request:
 #### Model Download Request
 ```
