@@ -85,7 +85,7 @@ class PearDetector:
 
         try:
             # Preprocess image
-            img = self._preprocess_image(image)
+            # image = self._preprocess_image(image)
 
             # fix return output (temporary
             # import random
@@ -99,26 +99,14 @@ class PearDetector:
             # Run inference
             # TODO: check the model output
             with torch.no_grad():
-                results = self.model.predict(img)
+                results = self.model.predict(image)
                 
             # Process results
-            predictions = results[0].boxes.cpu().numpy()
-            converted = []
-            for box,conf,cls in zip(predictions.xyxy, predictions.conf, predictions.cls):
-                converted.append([box[0], box[1], box[2], box[3], conf, cls])
-            predictions = np.array(converted)
+           
+            pred = results[0].boxes.cpu().numpy()
+            pred = pred[pred.conf > self.config.confidence_threshold]
+            predictions = np.array(pred.data)
           
-            # pred = (
-            #     predictions[predictions.conf > self.config.confidence_threshold]
-            #     if all([pred != "burn_bbox" for pred in self.names])
-            #     else predictions[predictions.conf > 0.7]
-            # )
-            # labels = [self.names[int(cat)] for cat in pred.cls]
-            #
-            # if any([label == "burn_bbox" for label in labels]):
-            #     return 1
-            # else:
-            #     return 0
 
             if len(predictions) == 0:
                 return DetectionResult(
@@ -133,7 +121,7 @@ class PearDetector:
 
             return DetectionResult(
                 error=Error(),
-                is_defective=bool(best_pred[5] == 0),  # Assume class 0 is defective
+                is_defective=bool(best_pred[5] != 4),  # The condition is != 4 or == 0
                 confidence=float(best_pred[4]),
                 bbox=tuple(best_pred[:4])
             )
