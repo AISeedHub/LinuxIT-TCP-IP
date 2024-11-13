@@ -1,52 +1,48 @@
 import logging
 from typing import Dict, Any, List
-from .base_handler import BaseHandler
-from ..model.pear_detector import PearDetector
-from ..utils.exceptions import ValidationError
+from .base_handler import BaseHandler, ResponseData
 
 logger = logging.getLogger(__name__)
 
 
 class ClassificationHandler(BaseHandler):
-    def __init__(self, detector: PearDetector):
-        self.detector = detector
-
     async def handle(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        if self.command_code == 0x01:  # request_classification
+            return await self._handle_classification(request)
+        elif self.command_code == 0x03:  # stop_classification
+            return await self._handle_stop()
+        else:
+            raise ValueError(f"Invalid command code for ClassificationHandler: {hex(self.command_code)}")
+
+    async def _handle_classification(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        response_data = []
+        files = request.get("request_data", [])
+
+        for file_name in files:
+            response = ResponseData(file_name=file_name)
+            try:
+                result = await self.model.inference(file_name)
+                error = result.error.error
+                if error:
+                    response.error_code = 2
+                    response.result = None
+                else:
+                    result = result.is_defective
+                    response.error_code = 0
+                    response.result = result
+            except Exception as e:
+                logger.error(f"Classification error: {e}")
+                response.error_code = 4  # timeout
+                response.result = None
+
+            response_data.append(vars(response))
+
+        return self.create_response(response_data)
+
+    async def _handle_stop(self) -> Dict[str, Any]:
         try:
-            self.validate(request)
-
-            if 'images' not in request:
-                raise ValidationError("No images provided")
-
-            results = []
-            for image_path in request['images']:
-                result = await self._process_image(image_path)
-                results.append(result)
-
-            return self._create_response(results)
-
+            #await self.model.ease_model()
+            return self.create_response([{"result": 2, "error_code": 0}])
         except Exception as e:
-            logger.error(f"Classification error: {e}")
-            return self._create_response(None, str(e))
-
-    async def _process_image(self, image_path: str) -> Dict[str, Any]:
-        try:
-            image = cv2.imread(image_path)
-            if image is None:
-                raise ValueError(f"Failed to load image: {image_path}")
-
-            result = await self.detector.detect(image)
-
-            return {
-                "path": image_path,
-                "is_defective": result.is_defective,
-                "confidence": result.confidence,
-                "bbox": result.bbox
-            }
-
-        except Exception as e:
-            logger.error(f"Error processing image {image_path}: {e}")
-            return {
-                "path": image_path,
-                "error": str(e)
-            }
+            logger.error(f"Stop classification error: {e}")
+            return self.create_error_response(4)
