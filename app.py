@@ -19,7 +19,7 @@ async def main():
 
         # Initialize model
         detector = PearDetector(config.model)
-        await detector.load_model(config.model.default_model_path)
+        detector.load_model(config.model.model_path)
 
         # Initialize and start server
         server = TCPServer(config.server, detector)
