@@ -1,5 +1,6 @@
 import logging
 from typing import Set
+import asyncio
 from .peer import Peer
 
 logger = logging.getLogger(__name__)
