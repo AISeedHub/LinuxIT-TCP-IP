@@ -88,22 +88,26 @@ class PearDetector:
             img = self._preprocess_image(image)
 
             # fix return output (temporary
-            import random
-            return DetectionResult(
-                    error=Error(),
-                    is_defective=random.choice([True, False]),
-                    confidence=0.0,
-                    bbox=None
-                )
+            # import random
+            # return DetectionResult(
+            #         error=Error(),
+            #         is_defective=random.choice([True, False]),
+            #         confidence=0.0,
+            #         bbox=None
+            #     )
 
             # Run inference
             # TODO: check the model output
             with torch.no_grad():
-                results = self.model(img)
-
+                results = self.model.predict(img)
+                
             # Process results
-            predictions = results.pred[0].cpu().numpy()
-
+            predictions = results[0].boxes.cpu().numpy()
+            converted = []
+            for box,conf,cls in zip(predictions.xyxy, predictions.conf, predictions.cls):
+                converted.append([box[0], box[1], box[2], box[3], conf, cls])
+            predictions = np.array(converted)
+          
             # pred = (
             #     predictions[predictions.conf > self.config.confidence_threshold]
             #     if all([pred != "burn_bbox" for pred in self.names])
