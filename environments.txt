@@ -1,7 +1,8 @@
 PyYAML
-onnxruntime
 opencv-python
 albumentations
 numpy
 wget
 ultralytics
+pytest-asyncio
+pytest
