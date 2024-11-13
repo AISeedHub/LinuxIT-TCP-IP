@@ -122,6 +122,7 @@ class PearDetector:
 
             if len(predictions) == 0:
                 return DetectionResult(
+                    error=Error(),
                     is_defective=True,  # No detection usually means defective
                     confidence=0.0,
                     bbox=None
@@ -131,6 +132,7 @@ class PearDetector:
             best_pred = predictions[predictions[:, 4].argmax()]
 
             return DetectionResult(
+                error=Error(),
                 is_defective=bool(best_pred[5] == 0),  # Assume class 0 is defective
                 confidence=float(best_pred[4]),
                 bbox=tuple(best_pred[:4])
