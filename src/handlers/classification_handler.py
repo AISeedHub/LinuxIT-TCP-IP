@@ -27,7 +27,7 @@ class ClassificationHandler(BaseHandler):
                     response.error_code = 2
                     response.result = None
                 else:
-                    result = result.is_defective
+                    result = result.is_normal
                     response.error_code = 0
                     response.result = result
             except Exception as e:

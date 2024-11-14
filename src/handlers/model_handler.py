@@ -2,6 +2,8 @@ import logging
 from typing import Dict, Any, List
 import os
 from .base_handler import BaseHandler, ResponseData
+from ..utils.directory import verify_directory
+from ..utils.exceptions import ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -22,24 +24,24 @@ class ModelHandler(BaseHandler):
         return await handler(request)
 
     async def _handle_current_model(self, request: Dict[str, Any]) -> Dict[str, Any]:
-        return self.create_response([{
-            "result": self.model.config.model_path,
-            "error_code": 0
-        }])
+        # for debugging purposes: print all the model configurations
+        print(self.model)
+        response = ResponseData(file_name=self.model.config.model_path, result=2)
+        return self.create_response([vars(response)])
 
     async def _handle_list_model(self, request: Dict[str, Any]) -> Dict[str, Any]:
         try:
             models = os.listdir(self.model.config.model_path.split("/")[0])
             if not models:
-                return self.create_response([{
-                    "result": None,
-                    "error_code": 2  # no models found
-                }])
+                response = ResponseData(file_name=None, result=1, error_code=2)
+                return self.create_response([vars(response)])
 
-            return self.create_response([
-                {"file_name": model, "result": None}
-                for model in models
-            ])
+            response_data = []
+            for model in models:
+                response = ResponseData(file_name=model, result=2)
+                response_data.append(vars(response))
+
+            return self.create_response(response_data)
         except Exception as e:
             logger.error(f"List models error: {e}")
             return self.create_error_response(2)
@@ -47,7 +49,12 @@ class ModelHandler(BaseHandler):
     async def _handle_model_change(self, request: Dict[str, Any]) -> Dict[str, Any]:
         try:
             model_name = request["request_data"][0]
-            self.model.change_model(model_name)
+            new_model_path = self.model.config.model_path.split("/")[0] + '/' + model_name
+
+            if not verify_directory(new_model_path):
+                raise ValidationError("Invalid directory provided")
+
+            self.model.change_model(new_model_path)
             return self.create_response([{
                 "file_name": model_name,
                 "result": 2

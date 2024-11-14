@@ -35,7 +35,7 @@ class TestPearDetector:
     async def test_inference(self, detector, test_image):
         result = await detector.detect(test_image)
         assert isinstance(result, DetectionResult)
-        assert isinstance(result.is_defective, bool)
+        assert isinstance(result.is_normal, bool)
         assert 0 <= result.confidence <= 1.0
 
     @pytest.mark.asyncio
@@ -43,7 +43,7 @@ class TestPearDetector:
         img_path = "../img/test.jpg"
         result = await detector.inference(img_path)  # Added await here
         assert isinstance(result, DetectionResult)
-        assert isinstance(result.is_defective, bool)
+        assert isinstance(result.is_normal, bool)
         assert 0 <= result.confidence <= 1.0
 
     @pytest.mark.asyncio
@@ -51,5 +51,5 @@ class TestPearDetector:
         empty_image = np.zeros((640, 640, 3), dtype=np.uint8)
         result = await detector.detect(empty_image)
         assert isinstance(result, DetectionResult)
-        assert not result.is_defective
+        assert not result.is_normal
         assert result.confidence == 0.0

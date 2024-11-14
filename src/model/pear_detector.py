@@ -7,6 +7,7 @@ from ultralytics import YOLO
 from dataclasses import dataclass
 from typing import Optional, Tuple
 from src.utils.exceptions import ModelError, InferenceError
+from src.utils.visualization import save_predictions_image
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ class Error:
 @dataclass
 class DetectionResult:
     error: Error
-    is_defective: bool
+    is_normal: int
     confidence: float
     bbox: Optional[Tuple[float, float, float, float]]
 
@@ -74,12 +75,13 @@ class PearDetector:
             dir_img = os.path.join(self.config.img_path, img_path)
             if os.path.exists(dir_img) is False:
                 logger.error(f"Image not found: {dir_img}")
-                return DetectionResult(Error(non_img=True), is_defective=False, confidence=0.0, bbox=None)
+                return DetectionResult(Error(non_img=True),
+                                       is_normal=False, confidence=0.0, bbox=None)
             img = cv2.imread(dir_img)
             return await self.detect(img)
         except Exception as e:
             logger.error(f"Inference error: {e}")
-            return DetectionResult(Error(error=True, non_detect=True), is_defective=False, confidence=0.0, bbox=None)
+            return DetectionResult(Error(error=True, non_detect=True), is_normal=False, confidence=0.0, bbox=None)
 
     async def detect(self, image: np.ndarray) -> DetectionResult:
         if self.model is None:
@@ -95,23 +97,26 @@ class PearDetector:
             pred = pred[pred.conf > self.config.confidence_threshold]
             predictions = np.array(pred.data)
 
-            if len(predictions) == 0:
+            # Save image with predictions
+            await save_predictions_image(image, predictions)
+
+            best_pred = predictions[predictions[:, 5] == 0]
+
+            if len(best_pred) == 0:
                 return DetectionResult(
                     error=Error(),
-                    is_defective=True,  # No detection usually means defective
+                    is_normal=1,  # No detection usually means 1
                     confidence=0.0,
                     bbox=None
                 )
-
-            # Get highest confidence prediction
-            best_pred = predictions[predictions[:, 4].argmax()]
-
-            return DetectionResult(
-                error=Error(),
-                is_defective=bool(best_pred[5] != 4),  # The condition is != 4 or == 0
-                confidence=float(best_pred[4]),
-                bbox=tuple(best_pred[:4])
-            )
+            else:
+                best_pred = best_pred[0]  # only one detection
+                return DetectionResult(
+                    error=Error(),
+                    is_normal=0,  # Defective
+                    confidence=float(best_pred[4]),
+                    bbox=tuple(best_pred[:4])
+                )
 
         except Exception as e:
             logger.error(f"Inference error: {e}")
@@ -120,18 +125,6 @@ class PearDetector:
     def _preprocess_image(self, image: np.ndarray):  # -> torch.Tensor:
         img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         return img
-        # # Convert BGR to RGB
-        # image = image[:, :, ::-1]
-        #
-        # # Resize
-        # image = cv2.resize(image, (self.config.img_size, self.config.img_size))
-        #
-        # # Normalize and convert to tensor
-        # image = image / 255.0
-        # image = torch.from_numpy(image).permute(2, 0, 1).float()
-        # image = image.unsqueeze(0).to(self.device)
-        #
-        # return image
 
     def unload_model(self) -> None:
         if self.model is not None:
@@ -139,3 +132,12 @@ class PearDetector:
             self.model = None
             torch.cuda.empty_cache()
             logger.info("Model unloaded")
+
+    def __str__(self):
+        str_format = f"Model path: {self.config.model_path}\n" \
+                     f"Image path: {self.config.img_path}\n" \
+                     f"Confidence threshold: {self.config.confidence_threshold}\n" \
+                     f"Device: {self.config.device}\n" \
+                     f"Image size: {self.config.img_size}\n" \
+                     f"Classes: {self.config.classes}"
+        return str_format
