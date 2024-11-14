@@ -26,7 +26,7 @@ class DirectoryHandler(BaseHandler):
 
     async def _handle_img_directory_change(self, request: Dict[str, Any]) -> Dict[str, Any]:
         """Handle directory change requests"""
-        new_dir = request.get("request_data")
+        new_dir = request.get("request_data")[0]
         if not new_dir:
             raise ValidationError("No directory provided")
 
