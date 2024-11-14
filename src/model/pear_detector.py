@@ -7,7 +7,7 @@ from ultralytics import YOLO
 from dataclasses import dataclass
 from typing import Optional, Tuple
 from src.utils.exceptions import ModelError, InferenceError
-
+import time
 logger = logging.getLogger(__name__)
 
 
@@ -33,6 +33,7 @@ class DetectionResult:
     is_defective: bool
     confidence: float
     bbox: Optional[Tuple[float, float, float, float]]
+    vis: Optional[str] = None
 
 
 class PearDetector:
@@ -106,25 +107,36 @@ class PearDetector:
             pred = results[0].boxes.cpu().numpy()
             pred = pred[pred.conf > self.config.confidence_threshold]
             predictions = np.array(pred.data)
-          
+           
+            # visualize the result
+            draw_img = image.copy()
+            for box in predictions:
+                draw_img = cv2.rectangle(draw_img, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])), (0, 255, 0), 3)
+                draw_img = cv2.putText(draw_img, f"{box[4]:.2f}", (int(box[0]), int(box[1])), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)
+            # saving file by time
+            file_name = f"{int(time.time())}.jpg"
+            cv2.imwrite(file_name, draw_img)
 
-            if len(predictions) == 0:
+
+            best_pred = predictions[predictions[:, 5] == 0]
+
+            if len(best_pred) == 0:
                 return DetectionResult(
                     error=Error(),
-                    is_defective=True,  # No detection usually means defective
+                    is_defective=False,  # No detection usually means non-defective
                     confidence=0.0,
-                    bbox=None
+                    bbox=None,
+                    vis=file_name
                 )
-
-            # Get highest confidence prediction
-            best_pred = predictions[predictions[:, 4].argmax()]
-
-            return DetectionResult(
-                error=Error(),
-                is_defective=bool(best_pred[5] != 4),  # The condition is != 4 or == 0
-                confidence=float(best_pred[4]),
-                bbox=tuple(best_pred[:4])
-            )
+            else:
+                best_pred = best_pred[0] # only one detection
+                return DetectionResult(
+                    error=Error(),
+                    is_defective=True,  # Defective
+                    confidence=float(best_pred[4]),
+                    bbox=tuple(best_pred[:4]),
+                    vis=file_name
+                )
 
         except Exception as e:
             logger.error(f"Inference error: {e}")
