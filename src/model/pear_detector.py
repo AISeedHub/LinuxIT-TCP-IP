@@ -20,12 +20,14 @@ class ModelConfig:
     img_size: int = 640
     classes: Tuple[str] = ('defective', 'non-defective')
 
+
 @dataclass
 class Error:
     error: bool = False
     non_model: bool = False
     non_img: bool = False
     non_detect: bool = False
+
 
 @dataclass
 class DetectionResult:
@@ -84,40 +86,18 @@ class PearDetector:
             raise ModelError("Model not loaded")
 
         try:
-            # Preprocess image
-            img = self._preprocess_image(image)
-
-            # fix return output (temporary
-            import random
-            return DetectionResult(
-                    error=Error(),
-                    is_defective=random.choice([True, False]),
-                    confidence=0.0,
-                    bbox=None
-                )
-
             # Run inference
-            # TODO: check the model output
             with torch.no_grad():
-                results = self.model(img)
+                results = self.model.predict(image)
 
             # Process results
-            predictions = results.pred[0].cpu().numpy()
-
-            # pred = (
-            #     predictions[predictions.conf > self.config.confidence_threshold]
-            #     if all([pred != "burn_bbox" for pred in self.names])
-            #     else predictions[predictions.conf > 0.7]
-            # )
-            # labels = [self.names[int(cat)] for cat in pred.cls]
-            #
-            # if any([label == "burn_bbox" for label in labels]):
-            #     return 1
-            # else:
-            #     return 0
+            pred = results[0].boxes.cpu().numpy()
+            pred = pred[pred.conf > self.config.confidence_threshold]
+            predictions = np.array(pred.data)
 
             if len(predictions) == 0:
                 return DetectionResult(
+                    error=Error(),
                     is_defective=True,  # No detection usually means defective
                     confidence=0.0,
                     bbox=None
@@ -127,7 +107,8 @@ class PearDetector:
             best_pred = predictions[predictions[:, 4].argmax()]
 
             return DetectionResult(
-                is_defective=bool(best_pred[5] == 0),  # Assume class 0 is defective
+                error=Error(),
+                is_defective=bool(best_pred[5] != 4),  # The condition is != 4 or == 0
                 confidence=float(best_pred[4]),
                 bbox=tuple(best_pred[:4])
             )
