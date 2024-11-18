@@ -113,4 +113,4 @@ pear_detection/
 ```
 
 ## 2. Command Processing Flow
-![Command Processing Flow](img/Command Processing Flow.png)
+![Command Processing Flow](img/Command-Processing-Flow.png)
