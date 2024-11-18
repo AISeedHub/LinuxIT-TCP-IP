@@ -174,7 +174,7 @@ class RequestValidator:
             cls.validate_file_list(request_data, ['.jpg', '.jpeg', '.png'])
         elif cmd == 0x20:  # request_download
             cls.validate_url(request_data[0])
-        elif cmd == 0x26:  # model_change_request
-            cls.validate_file_list(request_data, ['.pt'])
+        # elif cmd == 0x26:  # model_change_request
+        #     cls.validate_file_list(request_data, ['.pt'])
         elif cmd == 0x30:  # request_change_img_folder
             cls.validate_directory_path(request_data[0])

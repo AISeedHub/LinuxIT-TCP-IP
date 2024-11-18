@@ -43,7 +43,7 @@ class DirectoryHandler(BaseHandler):
     async def _handle_model_directory_change(self, request: Dict[str, Any]) -> Dict[str, Any]:
         """Handle model directory change requests"""
         try:
-            new_dir = request.get("request_data")
+            new_dir = request.get("request_data")[0]
             new_model_dir = new_dir + "/" + self.model.config.model_path.split("/")[-1]  # get the model name
             if not verify_directory(new_dir):
                 raise ValidationError("Invalid directory provided")

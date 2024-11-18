@@ -48,8 +48,10 @@ class ModelHandler(BaseHandler):
 
     async def _handle_model_change(self, request: Dict[str, Any]) -> Dict[str, Any]:
         try:
-            model_name = request["request_data"][0]
-            new_model_path = self.model.config.model_path.split("/")[0] + '/' + model_name
+            model_name = request["request_data"][0]  # 'model.pt'
+            # get the root directory of the model self.model.config.model_path = '/root/aiseed/models/best.pt'
+            root_dir = self.model.config.model_path[:-len(self.model.config.model_path.split("/")[-1])]
+            new_model_path = root_dir + '/' + model_name
 
             if not verify_directory(new_model_path):
                 raise ValidationError("Invalid directory provided")
