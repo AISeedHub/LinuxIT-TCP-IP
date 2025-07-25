@@ -5,28 +5,7 @@ This project is a **TCP server** designed to *listen for incoming connections* f
 
 ## Visual Overview
 
-```mermaid
-flowchart TD
-    A0["TCP Server
-"]
-    A1["Client Connection Handler (Peer)
-"]
-    A2["Command Handler System
-"]
-    A3["Pear Detection Model (PearDetector)
-"]
-    A4["Communication Protocol
-"]
-    A5["Application Configuration
-"]
-    A0 -- "Creates instances" --> A1
-    A5 -- "Provides settings" --> A0
-    A5 -- "Provides settings" --> A3
-    A1 -- "Adheres to" --> A4
-    A1 -- "Dispatches commands to" --> A2
-    A2 -- "Executes ML tasks" --> A3
-    A2 -- "Formats responses" --> A4
-```
+<img width="612" height="774" alt="image" src="https://github.com/user-attachments/assets/3208c250-2bcb-4178-8f88-8a51b7bd2191" />
 
 ## Chapters
 
