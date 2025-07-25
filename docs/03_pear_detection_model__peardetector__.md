@@ -108,27 +108,8 @@ Let's peek behind the curtain to see the steps our `PearDetector` takes when you
 
 ### The Expert's Workflow
 
-```mermaid
-sequenceDiagram
-    participant App(main.py)
-    participant PearDetector
-    participant Image File
-    participant YOLO Model (AI Brain)
+<img width="1146" height="892" alt="image" src="https://github.com/user-attachments/assets/cb6cfb52-7b41-451c-af6a-55d2d770ec80" />
 
-    App(main.py)->>PearDetector: "Initialize with settings (config.model)"
-    PearDetector->>PearDetector: Stores settings
-    App(main.py)->>PearDetector: "Load your AI brain (model_path)"
-    PearDetector->>YOLO Model (AI Brain): Loads model from 'model_path' (e.g., 'weights/best.pt')
-    YOLO Model (AI Brain)-->>PearDetector: "Brain loaded and ready!"
-    App(main.py)->>PearDetector: "Please analyze 'pear_farm.png'!" (inference call)
-    PearDetector->>Image File: Reads 'img/pear_farm.png'
-    Image File-->>PearDetector: Image data returned
-    PearDetector->>YOLO Model (AI Brain): "Here's the image, what do you see?" (predict call)
-    YOLO Model (AI Brain)-->>PearDetector: Raw detection results (confidences, locations)
-    PearDetector->>PearDetector: Filters results by confidence_threshold
-    PearDetector->>PearDetector: Determines if normal or defected
-    PearDetector-->>App(main.py): Returns structured DetectionResult
-```
 
 ### Key Code Pieces in `src/model/pear_detector.py`
 
