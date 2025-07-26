@@ -48,7 +48,7 @@ class TestPearDetector:
         result = await detector.detect(test_image)
         assert isinstance(result, DetectionResult)
         assert isinstance(result.is_normal, bool)
-        # assert not result.is_normal
+        assert not result.is_normal
         assert 0 <= result.confidence <= 1.0
 
     @pytest.mark.asyncio
