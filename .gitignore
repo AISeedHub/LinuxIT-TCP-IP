@@ -160,3 +160,4 @@ cython_debug/
 .idea/
 test*
 config/server-config.yaml
+*.pt
