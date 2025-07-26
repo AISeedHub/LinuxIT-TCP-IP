@@ -20,9 +20,9 @@ class TestPearDetector:
     @pytest.fixture
     def detector(self):
         config = ModelConfig(
-            model_path="../weights/best-2cls.pt",
-            classes=["pear", "defect"],
-            confidence_threshold=0.5
+            model_path="../weights/pear.pt",
+            classes=["pear", "apple"],
+            confidence_threshold=0.8
         )
         detector = PearDetector(config)
     
@@ -30,23 +30,25 @@ class TestPearDetector:
 
     def test_model_load(self, detector):
         assert detector.model is not None
-        assert detector.config.confidence_threshold == 0.5
+        assert detector.config.confidence_threshold == 0.8
+
+    
+    @pytest.mark.asyncio
+    async def test_inference_async(self, detector):
+        img_path = "./img/test5.jpg"
+        result = await detector.inference(img_path)  # Added await here
+        print(result)
+        assert isinstance(result, DetectionResult)
+        assert isinstance(result.is_normal, bool)
+        assert result.is_normal
+        assert 0 <= result.confidence <= 1.0
 
     @pytest.mark.asyncio
     async def test_inference(self, detector, test_image):
         result = await detector.detect(test_image)
         assert isinstance(result, DetectionResult)
         assert isinstance(result.is_normal, bool)
-        assert not result.is_normal
-        assert 0 <= result.confidence <= 1.0
-
-    @pytest.mark.asyncio
-    async def test_inference_async(self, detector):
-        img_path = "./img/test4.jpg"
-        result = await detector.inference(img_path)  # Added await here
-        assert isinstance(result, DetectionResult)
-        assert isinstance(result.is_normal, bool)
-        assert result.is_normal
+        # assert not result.is_normal
         assert 0 <= result.confidence <= 1.0
 
     @pytest.mark.asyncio

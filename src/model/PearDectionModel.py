@@ -90,10 +90,10 @@ class PearDetectionModel:
 
         labels = [self.names[int(cat)] for cat in pred[:, 4]]
 
-        if any([label == "defect" for label in labels]):
-            return False, pred
-        else:
+        if any([label == "pear" for label in labels]):
             return True, pred
+        else:
+            return False, np.array([])
 
     def two_step_inference(self, img: np.ndarray) -> Tuple[bool, np.ndarray]:
         """Run inference and return result and boxes
@@ -118,7 +118,7 @@ class PearDetectionModel:
 
         labels = [self.names[int(cat)] for cat in pred[:, 4]]
 
-        if any([label == "defect" for label in labels]):
-            return False, pred
-        else:
+        if any([label == "pear" for label in labels]):
             return True, pred
+        else:
+            return False, np.array([])
