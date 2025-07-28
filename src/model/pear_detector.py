@@ -4,7 +4,7 @@ import logging
 import cv2
 import os
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 from .PearDectionModel import PearDetectionModel
 from src.utils.exceptions import ModelError, InferenceError
 from src.utils.visualization import save_predictions_image
@@ -15,8 +15,9 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ModelConfig:
     model_path: str
-    classes: list[str]
+    classes: List[str]
     confidence_threshold: float = 0.5
+
 
 @dataclass
 class Error:
@@ -57,7 +58,6 @@ class PearDetector:
     #         logger.error(f"Failed to change model: {e}")
     #         raise ModelError(f"Model change failed: {e}")
 
-
     # inferencing
     async def inference(self, img_path) -> DetectionResult:
         try:
@@ -70,6 +70,99 @@ class PearDetector:
         except Exception as e:
             logger.error(f"Inference error: {e}")
             return DetectionResult(Error(error=True, non_detect=True), is_normal=False, confidence=0.0, bbox=None)
+
+    async def inferences(self, image_paths) -> List[DetectionResult]:
+        try:
+            # Load tất cả hình ảnh
+            images = []
+            valid_indices = []
+            results = []
+
+            for i, img_path in enumerate(image_paths):
+                if not os.path.exists(img_path):
+                    logger.error(f"Image not found: {img_path}")
+                    results.append(DetectionResult(
+                        error=Error(non_img=True),
+                        is_normal=False,
+                        confidence=0.0,
+                        bbox=None
+                    ))
+                else:
+                    img = cv2.imread(img_path)
+                    if img is not None:
+                        images.append(img)
+                        valid_indices.append(i)
+                    else:
+                        results.append(DetectionResult(
+                            error=Error(non_img=True),
+                            is_normal=False,
+                            confidence=0.0,
+                            bbox=None
+                        ))
+
+            # Xử lý tất cả hình ảnh hợp lệ cùng lúc
+            if images:
+                batch_results = self.full_batch_inference(images)
+
+                # Ghép kết quả vào đúng vị trí
+                result_idx = 0
+                for i in range(len(image_paths)):
+                    if i in valid_indices:
+                        results.insert(i, batch_results[result_idx])
+                        result_idx += 1
+
+            return results
+
+        except Exception as e:
+            logger.error(f"Inference error: {e}")
+            return [DetectionResult(Error(error=True, non_detect=True), is_normal=False, confidence=0.0, bbox=None)] * len(image_paths)
+
+    async def full_batch_inference(self, images: List[np.ndarray]) -> List[DetectionResult]:
+
+        if self.model is None:
+            raise ModelError("Model not loaded")
+
+        if not images:
+            return []
+
+        try:
+            # Preprocessing tất cả images cùng lúc
+            preprocessed_images = [self._preprocess_image(img) for img in images]
+
+            # YOLO batch inference cho TẤT CẢ hình ảnh cùng lúc
+            all_predictions = self.model.batch_inference_all(preprocessed_images)
+
+            # Xử lý kết quả từng hình
+            results = []
+            for i, predictions in enumerate(all_predictions):
+                if len(predictions) == 0:
+                    results.append(DetectionResult(
+                        error=Error(non_detect=True),
+                        is_normal=False,
+                        confidence=0.0,
+                        bbox=None
+                    ))
+                else:
+                    # Lấy detection có confidence cao nhất
+                    best_pred = max(predictions, key=lambda x: x[5])
+                    results.append(DetectionResult(
+                        error=Error(),
+                        is_normal=self._is_normal_classification(best_pred),
+                        confidence=float(best_pred[5]),
+                        bbox=tuple(best_pred[:4])
+                    ))
+
+            return results
+
+        except Exception as e:
+            logger.error(f"Full batch inference error: {e}")
+            # Trả về error results cho tất cả hình
+            return [DetectionResult(
+                error=Error(error=True),
+                is_normal=False,
+                confidence=0.0,
+                bbox=None
+            ) for _ in images]
 
     async def detect(self, image: np.ndarray) -> DetectionResult:
         if self.model is None:

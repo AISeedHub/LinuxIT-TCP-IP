@@ -17,25 +17,38 @@ class ClassificationHandler(BaseHandler):
     async def _handle_classification(self, request: Dict[str, Any]) -> Dict[str, Any]:
         response_data = []
         files = request.get("request_data", [])
-
-        for file_name in files:
+        results = await self.model.inferences(files) # results is the list of DetectionResult
+        for result, file_name in zip(results, files):
             response = ResponseData(file_name=file_name)
-            try:
-                result = await self.model.inference(file_name)
-                error = result.error.error
-                if error:
-                    response.error_code = 2
-                    response.result = None
-                else:
-                    result = result.is_normal
-                    response.error_code = 0
-                    response.result = result
-            except Exception as e:
-                logger.error(f"Classification error: {e}")
-                response.error_code = 4  # timeout
+            error = result.error.error
+            if error:
+                response.error_code = 2
                 response.result = None
+            else:
+                result = result.is_normal
+                response.error_code = 0
+                response.result = result
 
             response_data.append(vars(response))
+
+        # for file_name in files:
+        #     response = ResponseData(file_name=file_name)
+        #     try:
+        #         result = await self.model.inference(file_name)
+        #         error = result.error.error
+        #         if error:
+        #             response.error_code = 2
+        #             response.result = None
+        #         else:
+        #             result = result.is_normal
+        #             response.error_code = 0
+        #             response.result = result
+        #     except Exception as e:
+        #         logger.error(f"Classification error: {e}")
+        #         response.error_code = 4  # timeout
+        #         response.result = None
+        #
+        #     response_data.append(vars(response))
 
         return self.create_response(response_data)
 
