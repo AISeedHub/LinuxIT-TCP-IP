@@ -30,7 +30,7 @@ def convert_str_to_dict(data: str) -> Dict[str, Any]:
             return str(int(hex_value, 16))
 
         # Replace hex values with decimal
-        input_string = re.sub(r'0x[0-9A-Fa-f]+', convert_hex_to_dec, data)
+        input_string = re.sub(r'0[xX][0-9A-Fa-f]+', convert_hex_to_dec, data)
 
         # Parse the modified string as JSON
         return json.loads(input_string)
