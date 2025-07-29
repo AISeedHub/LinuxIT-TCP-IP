@@ -24,7 +24,7 @@ class TestPearDetector:
         config = ModelConfig(
             model_path=r"./weights/best-2cls.pt",
             classes=["pear", "defect"],
-            confidence_threshold=0.4
+            confidence_threshold=0.9
         )
         detector = PearDetector(config)
         return detector
