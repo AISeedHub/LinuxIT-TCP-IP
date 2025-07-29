@@ -6,7 +6,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import pytest
 import numpy as np
 import cv2
-from src.model.pear_detector import PearDetector, ModelConfig, DetectionResult
+from src.model.detector import PearDetector, ModelConfig, DetectionResult
 
 
 class TestPearDetector:

@@ -99,7 +99,7 @@ pear_detection/
 │   │   ├── model_handler.py
 │   │   └── directory_handler.py
 │   ├── model/
-│   │   └── pear_detector.py   # ML model wrapper
+│   │   └── detector.py   # ML model wrapper
 │   └── utils/
 │       ├── parsers.py         # Command parsing
 │       ├── validators.py      # Request validation

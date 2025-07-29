@@ -4,7 +4,7 @@ from typing import Optional, List
 from dataclasses import dataclass
 from .peer import Peer
 from .connection_manager import ConnectionManager
-from ..model.pear_detector import PearDetector
+from ..model.detector import PearDetector
 from ..utils.exceptions import ServerError
 
 logger = logging.getLogger(__name__)

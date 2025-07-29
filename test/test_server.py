@@ -1,7 +1,7 @@
 import pytest
 import asyncio
 from src.server.tcp_server import TCPServer
-from src.model.pear_detector import PearDetector
+from src.model.detector import PearDetector
 from src.utils.config import ServerConfig, ModelConfig
 
 

@@ -7,7 +7,7 @@ from ..handlers import get_handler, COMMAND_CODES
 from ..utils.parsers import convert_str_to_dict
 from ..utils.validators import RequestValidator
 from ..utils.exceptions import ValidationError
-from ..model.pear_detector import PearDetector
+from ..model.detector import PearDetector
 
 logger = logging.getLogger(__name__)
 

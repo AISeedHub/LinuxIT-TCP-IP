@@ -1,7 +1,7 @@
 import logging
 from typing import Dict, Any
 from .base_handler import BaseHandler, ResponseData
-from ..model.pear_detector import PearDetector
+from ..model.detector import PearDetector
 from ..utils.exceptions import ValidationError
 from ..utils.directory import verify_directory
 

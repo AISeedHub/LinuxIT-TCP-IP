@@ -4,6 +4,7 @@ import logging
 import cv2
 import os
 from ultralytics import YOLO
+from src.model.wrapperYOLO import PearModel
 from dataclasses import dataclass
 from typing import Optional, Tuple
 from src.utils.exceptions import ModelError, InferenceError
@@ -39,9 +40,23 @@ class DetectionResult:
 
 
 class PearDetector:
+    """
+    Class for detecting pears in images using a specified model.
+
+    This class provides functionality for managing a deep learning model, including:
+        - Loading a model from a specified path.
+        - Changing the model dynamically.
+        - Performing inference on images to detect pears.
+
+    Attributes:
+        config (ModelConfig): Configuration for the model, such as model file path, device, confidence threshold, etc.
+        model (Optional[torch.nn.Module]): The deep learning model used for detection.
+        device (torch.device): The computation device for the model, e.g., CPU or GPU.
+    """
+
     def __init__(self, config: ModelConfig):
         self.config = config
-        self.model: Optional[torch.nn.Module] = None
+        self.model: Optional[PearModel] = None
         self.device = torch.device(config.device)
 
     def change_model(self, model_path: str):
@@ -60,16 +75,15 @@ class PearDetector:
     def load_model(self, model_path: Optional[str] = None):
         try:
             path = model_path or self.config.model_path
-            # self.model = None
-            self.model = YOLO(path, task="detect")
-            self.model.to(self.device)
+            # self.model = YOLO(path, task="detect")
+            self.model = PearModel(self.config)
             logger.info(f"Model loaded successfully from {path}")
             logger.info(f"Model device: {self.device}")
         except Exception as e:
             logger.error(f"Failed to load model: {e}")
             raise ModelError(f"Model loading failed: {e}")
 
-    # inferencing
+    # inferencing .........................................................................
     async def inference(self, img_path) -> DetectionResult:
         try:
             dir_img = os.path.join(self.config.img_path, img_path)
@@ -89,20 +103,12 @@ class PearDetector:
 
         try:
             # Run inference
-            with torch.no_grad():
-                results = self.model.predict(image)
+            result, predictions = self.model.predict(image)
 
-            # Process results
-            pred = results[0].boxes.cpu().numpy()
-            pred = pred[pred.conf > self.config.confidence_threshold]
-            predictions = np.array(pred.data)
+            # Uncomment to run Debug: Save image with predictions
+            # await save_predictions_image(image, predictions)
 
-            # Save image with predictions
-            await save_predictions_image(image, predictions)
-
-            best_pred = predictions[predictions[:, 5] == 0]
-
-            if len(best_pred) == 0:
+            if len(predictions) == 0:  # No detections
                 return DetectionResult(
                     error=Error(),
                     is_normal=1,  # No detection usually means 1
@@ -110,21 +116,18 @@ class PearDetector:
                     bbox=None
                 )
             else:
-                best_pred = best_pred[0]  # only one detection
                 return DetectionResult(
                     error=Error(),
-                    is_normal=0,  # Defective
-                    confidence=float(best_pred[4]),
-                    bbox=tuple(best_pred[:4])
+                    is_normal=int(result),  # Defective
+                    confidence=float(predictions[0][5]),
+                    bbox=tuple(predictions[0][:4])
                 )
 
         except Exception as e:
             logger.error(f"Inference error: {e}")
             raise InferenceError(f"Detection failed: {e}")
 
-    def _preprocess_image(self, image: np.ndarray):  # -> torch.Tensor:
-        img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        return img
+    #  ........................................................................inferencing
 
     def unload_model(self) -> None:
         if self.model is not None:

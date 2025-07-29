@@ -3,7 +3,7 @@ from .classification_handler import ClassificationHandler
 from .model_handler import ModelHandler
 from .download_handler import DownloadHandler
 from .directory_handler import DirectoryHandler
-from ..model.pear_detector import PearDetector
+from ..model.detector import PearDetector
 
 # Command codes as integers (0x01 -> 1, etc.)
 COMMAND_CODES = {

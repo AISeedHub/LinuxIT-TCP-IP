@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
 
-from ..model.pear_detector import PearDetector
+from ..model.detector import PearDetector
 from ..utils.exceptions import ValidationError
 
 

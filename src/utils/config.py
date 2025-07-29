@@ -3,7 +3,7 @@ import logging
 from dataclasses import dataclass
 from typing import Dict, Any
 from ..server.tcp_server import ServerConfig
-from ..model.pear_detector import ModelConfig
+from ..model.detector import ModelConfig
 
 logger = logging.getLogger(__name__)
 

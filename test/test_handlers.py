@@ -1,7 +1,7 @@
 import pytest
 from src.handlers.classification_handler import ClassificationHandler
 from src.handlers.model_handler import ModelHandler
-from src.model.pear_detector import PearDetector
+from src.model.detector import PearDetector
 
 
 @pytest.fixture

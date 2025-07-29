@@ -3,7 +3,7 @@ import asyncio
 import logging
 from src.utils.config import ConfigLoader
 from src.server.tcp_server import TCPServer
-from src.model.pear_detector import PearDetector
+from src.model.detector import PearDetector
 
 logging.basicConfig(
     level=logging.INFO,
