@@ -22,9 +22,9 @@ class TestPearDetector:
     @pytest.fixture
     def detector(self):
         config = ModelConfig(
-            model_path=r"C:\Users\Andrew\Desktop\LinuxIT-TCP-IP\weights\pear.pt",
-            classes=["pear", "apple"],
-            confidence_threshold=0.8
+            model_path=r"./weights/best-2cls.pt",
+            classes=["pear", "defect"],
+            confidence_threshold=0.4
         )
         detector = PearDetector(config)
         return detector
@@ -32,11 +32,11 @@ class TestPearDetector:
     @pytest.fixture
     def test_image_paths(self):
         """Create list of test image paths"""
-        base_path = Path(r"C:\Users\Andrew\Desktop\LinuxIT-TCP-IP\test_photos")
+        base_path = Path(r"./test_photos")
         return [
-            str(base_path / "1.jpg"),
-            str(base_path / "2.jpg"),
-            str(base_path / "3.jpg")
+            str(base_path / "test1.jpg"),
+            str(base_path / "test2.jpg"),
+            str(base_path / "test3.jpg")
         ]
 
     def test_model_load(self, detector):
@@ -45,7 +45,7 @@ class TestPearDetector:
 
     @pytest.mark.asyncio
     async def test_inference_async(self, detector):
-        img_path = r"C:\Users\Andrew\Desktop\LinuxIT-TCP-IP\test_photos\1.jpg"
+        img_path = r"./test_photos/test2.jpg"
         result = await detector.inference(img_path)  # Added await here
         print(result)
         assert isinstance(result, DetectionResult)
@@ -60,7 +60,7 @@ class TestPearDetector:
 
     @pytest.mark.asyncio
     async def test_inference_defect(self, detector):
-        img_path = r"C:\Users\Andrew\Desktop\LinuxIT-TCP-IP\test_photos\2.jpg"
+        img_path = r"./test_photos/test1.jpg"
         result = await detector.inference(img_path)
         assert isinstance(result, DetectionResult)
         assert isinstance(result.is_normal, bool)

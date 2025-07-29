@@ -170,7 +170,7 @@ class PearDetector:
 
         try:
             # Run inference
-            is_normal, predictions = self.model.one_step_inference(image)
+            is_normal, predictions = self.model.one_step_defect_detection(image)
 
             # Save image with predictions
             await save_predictions_image(image, predictions)

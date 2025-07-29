@@ -94,6 +94,25 @@ class PearDetectionModel:
             return True, pred
         else:
             return False, np.array([])
+        
+    def one_step_defect_detection(self, img: np.ndarray) -> Tuple[bool, np.ndarray]:
+        """Run one step inference and return the predictions
+        Args:
+            img (np.ndarray): Input image in BGR format.
+        Returns:
+            Tuple[int, np.ndarray]: A tuple containing the result (1 for defect detected, 0 for no defect) and the predictions.
+        """
+        pred = self.detect(img)
+       
+        # Post-process the predictions
+        pred = self.postprocess(pred)
+
+        labels = [self.names[int(cat)] for cat in pred[:, 4]]
+
+        if any([label == "defect" for label in labels]):
+            return False, pred
+        else:
+            return True, pred
 
     def two_step_inference(self, img: np.ndarray) -> Tuple[bool, np.ndarray]:
         """Run inference and return result and boxes
