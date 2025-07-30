@@ -1,3 +1,6 @@
+# TCP-IP Server for Pear Detection
+
+![img.png](img/img.png)
 ## Installation
 - Navigate to the directory containing your requirements.txt file. Run the following command:
 ```
