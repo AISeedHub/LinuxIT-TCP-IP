@@ -11,13 +11,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.model.detector import PearDetector, ModelConfig, DetectionResult
 from src.utils.exceptions import ModelError
 
-# CONSTANTS
-CONFIDENCE_THRESHOLD = 0.9  # Default confidence threshold for model inference
-CLASSES = ("normal", "defective")  # Classes for the model
-MODEL_PATH = r"C:\Users\Andrew\Desktop\LinuxIT-TCP-IP\weights"  # Path to the model weights
-MODEL_DEFAULT = "best-2cls.pt"  # Default model file name
-IMG_PATH = r"C:\Users\Andrew\Desktop\LinuxIT-TCP-IP\test_photos"  # Path to a sample image for testing
-LIST_IMAGES_TEST = ["test1.jpg", "test2.jpg", "test3.jpg"]  # List of test images
+from configs import *
 
 
 class TestPearDetector:
