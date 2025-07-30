@@ -91,6 +91,19 @@ def int_to_hex(value: int) -> str:
     return f"0x{value:02x}"
 
 
+def convert_dict_to_str(data: Dict[str, Any]) -> str:
+    """
+    Convert a dictionary to JSON string.
+    
+    Args:
+        data: Dictionary to convert
+        
+    Returns:
+        JSON string representation
+    """
+    return json.dumps(data)
+
+
 # Example usage and tests
 if __name__ == "__main__":
     # Test conversion from string to dict
