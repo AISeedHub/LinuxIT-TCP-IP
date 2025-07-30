@@ -83,7 +83,7 @@ class PearDetector:
 
             if len(predictions) == 0:  # No detections
                 return DetectionResult(
-                    error=Error(),
+                    error=Error(non_detect=True),
                     is_normal=1,  # No detection usually means 1
                     confidence=0.0,
                     bbox=None
