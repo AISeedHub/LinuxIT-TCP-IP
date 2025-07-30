@@ -4,9 +4,8 @@ from typing import Tuple
 import numpy as np
 import time
 import sys
-from typing import Optional
 
-from src.model.detector import ModelConfig
+from src.model import ModelConfig
 
 
 class Logger:
@@ -96,7 +95,7 @@ class PearModel:
         pred = self.__detect_objects(img)
 
         # Post-process the predictions
-        pred = self.postprocess(pred)
+        pred = self.__post_process(pred)
 
         labels = [self.names[int(cat)] for cat in pred[:, 4]]
 

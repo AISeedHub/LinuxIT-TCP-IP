@@ -12,11 +12,8 @@ model:
   confidence_threshold: 0.9
   img_size: 640
   classes:
-    - 'burn_bbox'
     - 'defected_pear'
-    - 'defected_pear_bbox'
     - 'normal_pear'
-    - 'normal_pear_bbox'
 
 logging:
   level: "INFO"
