@@ -3,40 +3,13 @@ import numpy as np
 import logging
 import cv2
 import os
-from ultralytics import YOLO
+from typing import Optional
 from src.model.wrapperYOLO import PearModel
-from dataclasses import dataclass
-from typing import Optional, Tuple
+from src.model.typeconfig import ModelConfig, DetectionResult, Error
 from src.utils.exceptions import ModelError, InferenceError
-from src.utils.visualization import save_predictions_image
+# from src.utils.visualization import save_predictions_image
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class ModelConfig:
-    model_path: str
-    img_path: str
-    confidence_threshold: float = 0.9
-    device: str = 'cuda' if torch.cuda.is_available() else 'cpu'
-    img_size: int = 640
-    classes: Tuple[str] = ('defective', 'non-defective')
-
-
-@dataclass
-class Error:
-    error: bool = False
-    non_model: bool = False
-    non_img: bool = False
-    non_detect: bool = False
-
-
-@dataclass
-class DetectionResult:
-    error: Error
-    is_normal: int
-    confidence: float
-    bbox: Optional[Tuple[float, float, float, float]]
 
 
 class PearDetector:
@@ -110,7 +83,7 @@ class PearDetector:
 
             if len(predictions) == 0:  # No detections
                 return DetectionResult(
-                    error=Error(),
+                    error=Error(non_detect=True),
                     is_normal=1,  # No detection usually means 1
                     confidence=0.0,
                     bbox=None

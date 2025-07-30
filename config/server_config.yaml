@@ -7,16 +7,13 @@ server:
   encoding: "utf-8"
 
 model:
-  model_path: "weights/best.pt"
+  model_path: "weights/pear.pt"
   img_path: "img"
   confidence_threshold: 0.9
   img_size: 640
   classes:
-    - 'burn_bbox'
-    - 'defected_pear'
-    - 'defected_pear_bbox'
-    - 'normal_pear'
-    - 'normal_pear_bbox'
+    - 'pear'
+    - 'apple'
 
 logging:
   level: "INFO"

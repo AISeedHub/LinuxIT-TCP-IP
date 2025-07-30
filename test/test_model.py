@@ -19,9 +19,10 @@ class TestPearDetector:
     @pytest.fixture
     def detector(self):
         config = ModelConfig(
-            model_path="../weights/best.pt",
-            img_path="img/test.jpg",
-            confidence_threshold=0.5
+            model_path="../weights/best-2cls.pt",
+            img_path="./test_photos",
+            classes=('defect', 'non-defective'),
+            confidence_threshold=0.8
         )
         detector = PearDetector(config)
         detector.load_model()
@@ -29,27 +30,44 @@ class TestPearDetector:
 
     def test_model_load(self, detector):
         assert detector.model is not None
-        assert detector.config.confidence_threshold == 0.5
+        assert detector.config.confidence_threshold == 0.8
 
     @pytest.mark.asyncio
-    async def test_inference(self, detector, test_image):
+    async def test_detection(self, detector, test_image):
         result = await detector.detect(test_image)
         assert isinstance(result, DetectionResult)
-        assert isinstance(result.is_normal, bool)
+        assert isinstance(result.is_normal, int)
         assert 0 <= result.confidence <= 1.0
 
     @pytest.mark.asyncio
     async def test_inference_async(self, detector):
-        img_path = "../img/test.jpg"
+        img_path = "test1.jpg"
         result = await detector.inference(img_path)  # Added await here
         assert isinstance(result, DetectionResult)
-        assert isinstance(result.is_normal, bool)
+        assert isinstance(result.is_normal, int)
+        assert result.error.non_img is False
         assert 0 <= result.confidence <= 1.0
+
+    @pytest.mark.parametrize("img_path, is_normal", [
+        ("test1.jpg", 1),
+        ("test2.jpg", 0),
+        ("test3.jpg", 0),
+        ("test4.jpg", 0),
+        ("test5.jpg", 0),
+    ])
+    @pytest.mark.asyncio
+    async def test_multiple_images(self, detector, img_path, is_normal):
+       
+        result = await detector.inference(img_path)
+        assert isinstance(result, DetectionResult)
+        assert result.is_normal == is_normal
+
 
     @pytest.mark.asyncio
     async def test_empty_image(self, detector):
         empty_image = np.zeros((640, 640, 3), dtype=np.uint8)
         result = await detector.detect(empty_image)
         assert isinstance(result, DetectionResult)
-        assert not result.is_normal
+        assert result.is_normal
+        assert result.error.non_detect is True
         assert result.confidence == 0.0

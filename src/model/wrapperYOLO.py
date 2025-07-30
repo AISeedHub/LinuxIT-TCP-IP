@@ -4,10 +4,8 @@ from typing import Tuple
 import numpy as np
 import time
 import sys
-from typing import Optional
 
-from src.model.detector import ModelConfig
-
+from src.model.typeconfig import ModelConfig
 
 class Logger:
     def __init__(self, name: str):
@@ -96,7 +94,7 @@ class PearModel:
         pred = self.__detect_objects(img)
 
         # Post-process the predictions
-        pred = self.postprocess(pred)
+        pred = self.__post_process(pred)
 
         labels = [self.names[int(cat)] for cat in pred[:, 4]]
 
@@ -111,14 +109,14 @@ class PearModel:
             img (np.ndarray): Input image in BGR format.
         Returns:
             Tuple[int, np.ndarray]: A tuple containing the result (1 for defect detected, 0 for no defect) and the predictions."""
-        pred = self.detect(img)
+        pred = self.__detect_objects(img)
         # check the fruit boxes appeared in the image, if yes, crop the fruit boxes and run prediction on the cropped image
         for box in pred:
             x1, y1, x2, y2 = map(int, box[:4])
             x1, y1, x2, y2 = x1 - 10, y1 - 10, x2 + 10, y2 + 10  # Add padding
             if box[4] == 0:  # Assuming class 0 is the fruit class
                 fruit_box = img[y1:y2, x1:x2]
-                fruit_pred = self.detect(fruit_box)
+                fruit_pred = self.__detect_objects(fruit_box)
                 # Check if any defect is detected in the fruit box, if yes, recalibrate the defect boxes
                 if len(fruit_pred) > 0:
                     defect_boxes = fruit_pred[fruit_pred[:, 4] == 1]
