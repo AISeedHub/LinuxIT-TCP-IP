@@ -1,0 +1,8 @@
+gateway_config:
+  ip: '127.0.0.1'
+  port: 50020 # test server
+
+node_config:
+  - slave_id: '1'
+    csv_file_path: 'D:\SynologyDrive-ICLAB\회사개발\LinuxIT-TCP-IP\csv_tcp_sender\slave_id_1.csv'
+    ext_pos: '37.5665,126.9780'
