@@ -49,7 +49,9 @@ def make_ext_data_json(data_rows, ext_pos, timestamp=None):
             "ext_hum": str(row.get("Humidity", -1.0)),
             "ext_rainfall": str(row.get("Rain", -1.0)),
             "ext_solar": str(row.get("Solar", -1.0)),
-            "ext_irr_amount": str(row.get("Irr_Amount", -1.0)),
+            # "ext_irr_amount": str(row.get("Irr_Amount", -1.0)),
+            "ext_w_dir": str(row.get("Wind_Direction", -1.0)),
+            "ext_w_spd": str(row.get("Wind_Speed", -1.0)),
             "r_time": row.get("Datetime", str(-1.0)),
         }
         data_list.append(data)
