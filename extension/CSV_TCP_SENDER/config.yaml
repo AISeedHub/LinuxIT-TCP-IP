@@ -4,5 +4,5 @@ gateway_config:
 
 node_config:
   - slave_id: '1'
-    csv_file_path: 'D:\SynologyDrive-ICLAB\회사개발\LinuxIT-TCP-IP\csv_tcp_sender\slave_id_1.csv'
+    csv_file_path: 'D:\SynologyDrive-ICLAB\aiseed_development\LinuxIT-TCP-IP\extension\CSV_TCP_SENDER\slave_id_1.csv'
     ext_pos: '37.5665,126.9780'
