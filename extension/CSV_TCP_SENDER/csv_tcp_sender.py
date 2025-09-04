@@ -68,7 +68,7 @@ def send_json_to_gateway(json_str, ip, port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.connect((ip, port))
         sock.sendall(json_str.encode('utf-8'))
-        print(f"[INFO] Sent JSON to {ip}:{port}")
+        print(f"[INFO] Sent JSON to {ip}:{port} - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
 def load_cache(cache_path):
     if not os.path.exists(cache_path):
@@ -94,9 +94,9 @@ if __name__ == "__main__":
         node_id = node.get('node_id', csv_path)  # node_id가 없으면 파일 경로로 대체
         last_dt = cache.get(node_id)
         if csv_path:
-            print(f"\n[INFO] Reading CSV: {csv_path}")
+            print(f"\n[INFO] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Reading CSV: {csv_path}")
             csv_lines = read_csv_file(csv_path)
-            print(f"[INFO] {len(csv_lines)} rows loaded.")
+            print(f"[INFO] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {len(csv_lines)} rows loaded.")
             # last_dt 이후의 데이터만 추출
             filtered_rows = []
             for row in csv_lines:
@@ -109,12 +109,12 @@ if __name__ == "__main__":
                 cache[node_id] = filtered_rows[-1]['Datetime']
             new_csv_lines_in_node.extend(filtered_rows)
         else:
-            print("[WARN] csv_file_path not found in node config.")
+            print("[WARN] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - csv_file_path not found in node config.")
     # JSON 생성 및 전송
     if new_csv_lines_in_node:
         json_str = make_ext_data_json(new_csv_lines_in_node, ext_pos)
         send_json_to_gateway(json_str, gateway_ip, gateway_port)
         save_cache(CACHE_FILE, cache)
     else:
-        print("[INFO] 전송할 새로운 데이터가 없습니다.")
+        print(f"[INFO] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - 전송할 새로운 데이터가 없습니다.")
     
