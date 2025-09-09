@@ -5,6 +5,30 @@ from datetime import datetime
 import json
 import time
 import socket
+import logging
+
+# ========= Data Logger =========
+# Set Formatter
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+
+# Set Basic Config for Logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format=formatter._fmt,
+    datefmt=formatter.datefmt,
+)
+
+# Logger File Handler
+file_handler = logging.FileHandler('./logs/csv_tcp_sender.log', encoding='utf-8')
+file_handler.setLevel(logging.DEBUG)
+file_handler.setFormatter(formatter)
+
+
+# Get Logger and Handlers
+logger = logging.getLogger("csv_tcp_sender")
+logger.addHandler(file_handler)
 
 def load_config_yaml(config_path):
     with open(config_path, 'r', encoding='utf-8') as f:
@@ -22,7 +46,7 @@ def read_csv_file(csv_file_path):
         if is_valid_csv_file(csv_lines):
             return csv_lines
         else:
-            print(f"[WARN] CSV 파일이 아직 완전히 기록되지 않음. 1초 후 재시도: {csv_file_path}")
+            logger.warning(f"CSV 파일이 아직 완전히 기록되지 않음. 1초 후 재시도: {csv_file_path}")
             time.sleep(1)
     
 def is_valid_csv_file(csv_lines):
@@ -69,7 +93,7 @@ def send_json_to_gateway(json_str, ip, port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.connect((ip, port))
         sock.sendall(json_str.encode('utf-8'))
-        print(f"[INFO] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Sent JSON to {ip}:{port} - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        logger.info(f"Sent JSON to {ip}:{port} - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
 def load_cache(cache_path):
     if not os.path.exists(cache_path):
@@ -84,11 +108,11 @@ def save_cache(cache_path, cache_dict):
 if __name__ == "__main__":
     while True:
         startTime = time.time()
-        print()
+        logger.info("========== Start Loop ===========")
         CONFIG_FILE = os.path.join(os.path.dirname(__file__), 'config.yaml')
-        print(f"[INFO] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - config.yaml 로딩 완료")
+        logger.info("config.yaml 로딩 완료")
         CACHE_FILE = os.path.join(os.path.dirname(__file__), '.cache.yaml')
-        print(f"[INFO] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - .cache.yaml 로딩 완료")
+        logger.info(".cache.yaml 로딩 완료")
         gateway_config, node_configs, sender_config = load_config_yaml(CONFIG_FILE)
         gateway_ip = gateway_config.get('ip')
         gateway_port = int(gateway_config.get('port'))
@@ -101,9 +125,9 @@ if __name__ == "__main__":
             node_id = node.get('node_id', csv_path)  # node_id가 없으면 파일 경로로 대체
             last_dt = cache.get(node_id)
             if csv_path:
-                print(f"[INFO] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Reading CSV: {csv_path}")
+                logger.info(f"Reading CSV: {csv_path}")
                 csv_lines = read_csv_file(csv_path)
-                print(f"[INFO] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {len(csv_lines)} rows loaded.")
+                logger.info(f"{len(csv_lines)} rows loaded.")
                 # last_dt 이후의 데이터만 추출
                 filtered_rows = []
                 for row in csv_lines:
@@ -111,23 +135,24 @@ if __name__ == "__main__":
                     if last_dt is None or (row_dt and row_dt > last_dt):
                         row['ext_pos'] = ext_pos
                         filtered_rows.append(row)
+                logger.info(f"New {len(filtered_rows)} rows Founded")
                 if filtered_rows:
                     # 최신 Datetime으로 cache 업데이트
                     cache[node_id] = filtered_rows[-1]['Datetime']
                 new_csv_lines_in_node.extend(filtered_rows)
             else:
-                print("[WARN] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - csv_file_path not found in node config.")
+                logger.warning("csv_file_path not found in node config.")
         # JSON 생성 및 전송
         if new_csv_lines_in_node:
-            print(f"[INFO] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - 전송할 새로운 데이터가 {len(new_csv_lines_in_node)}개 있습니다.")
+            logger.info(f"전송할 새로운 데이터가 {len(new_csv_lines_in_node)}개 있습니다.")
             json_str = make_ext_data_json(new_csv_lines_in_node, ext_pos)
             send_json_to_gateway(json_str, gateway_ip, gateway_port)
             save_cache(CACHE_FILE, cache)
         else:
-            print(f"[INFO] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - 전송할 새로운 데이터가 없습니다.")
+            logger.info("전송할 새로운 데이터가 없습니다.")
         
         endTime = time.time()
         sleepTime = send_interval_seconds - (endTime - startTime)
-        print(f"[INFO] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - sleepTime: {sleepTime:.2f} seconds")
+        logger.info(f"sleepTime: {sleepTime:.2f} seconds")
         time.sleep(sleepTime)
 
