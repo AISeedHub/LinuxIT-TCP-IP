@@ -174,7 +174,7 @@ if __name__ == "__main__":
             logger.error(f"Error in {file_name} at line {line_no}: {str(e)}")
         finally:
             # Set default value for send_interval_seconds
-            if not hasattr(locals(), 'send_interval_seconds') or not send_interval_seconds: # if reading config.yaml is failed
+            if 'send_interval_seconds' not in locals() or not send_interval_seconds: # if reading config.yaml is failed
                 send_interval_seconds = 20
                 logger.warning(f"Send_interval_seconds not found in config, using default value: {send_interval_seconds} seconds")
             
