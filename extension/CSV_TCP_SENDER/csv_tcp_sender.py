@@ -153,6 +153,6 @@ if __name__ == "__main__":
         
         endTime = time.time()
         sleepTime = send_interval_seconds - (endTime - startTime)
-        logger.info(f"sleepTime: {sleepTime:.2f} seconds")
+        logger.info(f"Sleep For Next Loop: {sleepTime:.2f} seconds")
         time.sleep(sleepTime)
 
