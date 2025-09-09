@@ -109,50 +109,53 @@ if __name__ == "__main__":
     while True:
         startTime = time.time()
         logger.info("========== Start Loop ===========")
-        CONFIG_FILE = os.path.join(os.path.dirname(__file__), 'config.yaml')
-        logger.info("config.yaml 로딩 완료")
-        CACHE_FILE = os.path.join(os.path.dirname(__file__), '.cache.yaml')
-        logger.info(".cache.yaml 로딩 완료")
-        gateway_config, node_configs, sender_config = load_config_yaml(CONFIG_FILE)
-        gateway_ip = gateway_config.get('ip')
-        gateway_port = int(gateway_config.get('port'))
-        cache = load_cache(CACHE_FILE)
-        send_interval_seconds = sender_config.get('send_interval_seconds', 10)
-        new_csv_lines_in_node = []
-        for node in node_configs:
-            ext_pos = node.get('ext_pos', '')
-            csv_path = node.get('csv_file_path')
-            node_id = node.get('node_id', csv_path)  # node_id가 없으면 파일 경로로 대체
-            last_dt = cache.get(node_id)
-            if csv_path:
-                logger.info(f"Reading CSV: {csv_path}")
-                csv_lines = read_csv_file(csv_path)
-                logger.info(f"{len(csv_lines)} rows loaded.")
-                # last_dt 이후의 데이터만 추출
-                filtered_rows = []
-                for row in csv_lines:
-                    row_dt = row.get('Datetime')
-                    if last_dt is None or (row_dt and row_dt > last_dt):
-                        row['ext_pos'] = ext_pos
-                        filtered_rows.append(row)
-                logger.info(f"New {len(filtered_rows)} rows Founded")
-                if filtered_rows:
-                    # 최신 Datetime으로 cache 업데이트
-                    cache[node_id] = filtered_rows[-1]['Datetime']
-                new_csv_lines_in_node.extend(filtered_rows)
+        try:
+            CONFIG_FILE = os.path.join(os.path.dirname(__file__), 'config.yaml')
+            logger.info("config.yaml 로딩 완료")
+            CACHE_FILE = os.path.join(os.path.dirname(__file__), '.cache.yaml')
+            logger.info(".cache.yaml 로딩 완료")
+            gateway_config, node_configs, sender_config = load_config_yaml(CONFIG_FILE)
+            gateway_ip = gateway_config.get('ip')
+            gateway_port = int(gateway_config.get('port'))
+            cache = load_cache(CACHE_FILE)
+            send_interval_seconds = sender_config.get('send_interval_seconds', 10)
+            new_csv_lines_in_node = []
+            for node in node_configs:
+                ext_pos = node.get('ext_pos', '')
+                csv_path = node.get('csv_file_path')
+                node_id = node.get('node_id', csv_path)  # node_id가 없으면 파일 경로로 대체
+                last_dt = cache.get(node_id)
+                if csv_path:
+                    logger.info(f"Reading CSV: {csv_path}")
+                    csv_lines = read_csv_file(csv_path)
+                    logger.info(f"{len(csv_lines)} rows loaded.")
+                    # last_dt 이후의 데이터만 추출
+                    filtered_rows = []
+                    for row in csv_lines:
+                        row_dt = row.get('Datetime')
+                        if last_dt is None or (row_dt and row_dt > last_dt):
+                            row['ext_pos'] = ext_pos
+                            filtered_rows.append(row)
+                    logger.info(f"New {len(filtered_rows)} rows Founded")
+                    if filtered_rows:
+                        # 최신 Datetime으로 cache 업데이트
+                        cache[node_id] = filtered_rows[-1]['Datetime']
+                    new_csv_lines_in_node.extend(filtered_rows)
+                else:
+                    logger.warning("csv_file_path not found in node config.")
+            # JSON 생성 및 전송
+            if new_csv_lines_in_node:
+                logger.info(f"전송할 새로운 데이터가 {len(new_csv_lines_in_node)}개 있습니다.")
+                json_str = make_ext_data_json(new_csv_lines_in_node, ext_pos)
+                send_json_to_gateway(json_str, gateway_ip, gateway_port)
+                save_cache(CACHE_FILE, cache)
             else:
-                logger.warning("csv_file_path not found in node config.")
-        # JSON 생성 및 전송
-        if new_csv_lines_in_node:
-            logger.info(f"전송할 새로운 데이터가 {len(new_csv_lines_in_node)}개 있습니다.")
-            json_str = make_ext_data_json(new_csv_lines_in_node, ext_pos)
-            send_json_to_gateway(json_str, gateway_ip, gateway_port)
-            save_cache(CACHE_FILE, cache)
-        else:
-            logger.info("전송할 새로운 데이터가 없습니다.")
-        
-        endTime = time.time()
-        sleepTime = send_interval_seconds - (endTime - startTime)
-        logger.info(f"Sleep For Next Loop: {sleepTime:.2f} seconds")
-        time.sleep(sleepTime)
+                logger.info("전송할 새로운 데이터가 없습니다.")
+        except Exception as e:
+            logger.error(f"Error: {e}")
+        finally:
+            endTime = time.time()
+            sleepTime = send_interval_seconds - (endTime - startTime)
+            logger.info(f"Sleep For Next Loop: {sleepTime:.2f} seconds")
+            time.sleep(sleepTime)
 
