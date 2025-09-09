@@ -21,8 +21,8 @@ logging.basicConfig(
 )
 
 # Logger File Handler
-script_dir = os.path.dirname(os.path.abspath(__file__))
-file_handler = logging.FileHandler(os.path.join(script_dir, 'logs', 'csv_tcp_sender.log'), encoding='utf-8')
+SCRIPT_DIR = os.path.dirname(__file__)
+file_handler = logging.FileHandler(os.path.join(SCRIPT_DIR, 'logs', 'csv_tcp_sender.log'), encoding='utf-8')
 file_handler.setLevel(logging.DEBUG)
 file_handler.setFormatter(formatter)
 
@@ -125,15 +125,19 @@ if __name__ == "__main__":
         startTime = time.time()
         logger.info("========== Start Loop ===========")
         try:
-            CONFIG_FILE = os.path.join(os.path.dirname(__file__), 'config.yaml')
-            logger.info("config.yaml 로딩 완료")
-            CACHE_FILE = os.path.join(os.path.dirname(__file__), '.cache.yaml')
-            logger.info(".cache.yaml 로딩 완료")
+            # Load config.yaml
+            CONFIG_FILE = os.path.join(SCRIPT_DIR, 'config.yaml')
             gateway_config, node_configs, sender_config = load_config_yaml(CONFIG_FILE)
             gateway_ip = gateway_config.get('ip')
             gateway_port = int(gateway_config.get('port'))
+            send_interval_seconds = sender_config.get('send_interval_seconds')
+            logger.info("config.yaml 로딩 완료")
+
+            # Load .cache.yaml
+            CACHE_FILE = os.path.join(SCRIPT_DIR, '.cache.yaml')
             cache = load_cache(CACHE_FILE)
-            send_interval_seconds = sender_config.get('send_interval_seconds', 10)
+            logger.info(".cache.yaml 로딩 완료")
+            
             new_csv_lines_in_node = []
             for node in node_configs:
                 ext_pos = node.get('ext_pos', '')
