@@ -37,7 +37,7 @@ def load_config_yaml(config_path):
     
     # Check if gateway_config is valid
     gateway_config = config.get('gateway_config', {})
-    if len(gateway_config) == 0:
+    if gateway_config is None or len(gateway_config) == 0:
         raise ValueError("In config.yaml, No gateway_config is founded. Use \ngateway_config:\n  ip: '127.0.0.1'\n  port: 50020")
 
     # Check if node_config is valid
@@ -47,7 +47,7 @@ def load_config_yaml(config_path):
 
     # Check if sender_config is valid
     sender_config = config.get('sender_config', {})
-    if len(sender_config) == 0:
+    if sender_config is None or len(sender_config) == 0:
         raise ValueError("In config.yaml, No sender_config is founded. Use \nsender_config:\n  send_interval_seconds: 20")
     sender_config = config.get('sender_config', {})
 
