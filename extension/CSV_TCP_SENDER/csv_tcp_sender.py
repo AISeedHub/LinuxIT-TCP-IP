@@ -34,9 +34,23 @@ logger.addHandler(file_handler)
 def load_config_yaml(config_path):
     with open(config_path, 'r', encoding='utf-8') as f:
         config = yaml.safe_load(f)
+    
+    # Check if gateway_config is valid
     gateway_config = config.get('gateway_config', {})
+    if len(gateway_config) == 0:
+        raise ValueError("In config.yaml, No gateway_config is founded. Use \ngateway_config:\n  ip: '127.0.0.1'\n  port: 50020")
+
+    # Check if node_config is valid
     node_configs = config.get('node_config', [])
+    if node_configs is None or len(node_configs) == 0:
+        raise ValueError("In config.yaml, No node_config is founded. Use \nnode_config:\n  - slave_id: '1'\n    csv_file_path: 'path/to/csv'\n    ext_pos: '37.5665,126.9780'")
+
+    # Check if sender_config is valid
     sender_config = config.get('sender_config', {})
+    if len(sender_config) == 0:
+        raise ValueError("In config.yaml, No sender_config is founded. Use \nsender_config:\n  send_interval_seconds: 20")
+    sender_config = config.get('sender_config', {})
+
     return gateway_config, node_configs, sender_config
 
 def read_csv_file(csv_file_path):
@@ -170,7 +184,7 @@ if __name__ == "__main__":
             if sleepTime < 0:
                 logger.warning("Sleep time is negative, using 0 seconds")
                 sleepTime = 0
-                
+
             # Sleep for next loop
             logger.info(f"Sleep For Next Loop: {sleepTime:.2f} seconds")
             time.sleep(sleepTime)
