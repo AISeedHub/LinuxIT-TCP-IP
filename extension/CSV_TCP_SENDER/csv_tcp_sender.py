@@ -22,6 +22,7 @@ logging.basicConfig(
 
 # Logger File Handler
 SCRIPT_DIR = os.path.dirname(__file__)
+os.makedirs(os.path.join(SCRIPT_DIR, 'logs'), exist_ok=True)
 file_handler = logging.FileHandler(os.path.join(SCRIPT_DIR, 'logs', 'csv_tcp_sender.log'), encoding='utf-8')
 file_handler.setLevel(logging.DEBUG)
 file_handler.setFormatter(formatter)
