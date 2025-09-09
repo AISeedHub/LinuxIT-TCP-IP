@@ -162,7 +162,9 @@ if __name__ == "__main__":
             if new_csv_lines_in_node:
                 logger.info(f"전송할 새로운 데이터가 {len(new_csv_lines_in_node)}개 있습니다.")
                 json_str = make_ext_data_json(new_csv_lines_in_node, ext_pos)
+                logger.info(f"전송시도: {gateway_ip}:{gateway_port}")
                 send_json_to_gateway(json_str, gateway_ip, gateway_port)
+                logger.info(f"전송완료: {gateway_ip}:{gateway_port}")
                 save_cache(CACHE_FILE, cache)
             else:
                 logger.info("전송할 새로운 데이터가 없습니다.")
