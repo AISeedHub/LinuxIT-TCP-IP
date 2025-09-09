@@ -153,10 +153,25 @@ if __name__ == "__main__":
             else:
                 logger.info("전송할 새로운 데이터가 없습니다.")
         except Exception as e:
-            logger.error(f"Error: {e}")
+            import traceback
+            error_info = traceback.extract_tb(e.__traceback__)[-1]
+            file_name = error_info.filename
+            line_no = error_info.lineno
+            logger.error(f"Error in {file_name} at line {line_no}: {str(e)}")
         finally:
+            # Set default value for send_interval_seconds
+            if not hasattr(locals(), 'send_interval_seconds') or not send_interval_seconds: # if reading config.yaml is failed
+                send_interval_seconds = 20
+                logger.warning(f"Send_interval_seconds not found in config, using default value: {send_interval_seconds} seconds")
+            
+            # Calculate sleep time
             endTime = time.time()
             sleepTime = send_interval_seconds - (endTime - startTime)
+            if sleepTime < 0:
+                logger.warning("Sleep time is negative, using 0 seconds")
+                sleepTime = 0
+                
+            # Sleep for next loop
             logger.info(f"Sleep For Next Loop: {sleepTime:.2f} seconds")
             time.sleep(sleepTime)
 
