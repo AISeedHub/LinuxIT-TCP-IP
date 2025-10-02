@@ -173,7 +173,7 @@ def send_json_to_gateway(json_str: str, ip: str, port: int) -> None:
             logger.info(f"Sent JSON to {ip}:{port} - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     except socket.timeout:
         raise NetworkError(f"게이트웨이 연결 타임아웃: {ip}:{port}")
-    except socket.connectionRefusedError:
+    except ConnectionRefusedError:
         raise NetworkError(f"게이트웨이 연결 거부됨: {ip}:{port}")
     except socket.gaierror as e:
         raise NetworkError(f"게이트웨이 주소 해석 실패: {ip}:{port} - {e}")
