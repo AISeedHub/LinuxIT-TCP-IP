@@ -63,6 +63,9 @@ def setup_logging() -> logging.Logger:
 # Initialize logger
 logger = setup_logging()
 
+# Script directory
+SCRIPT_DIR = os.path.dirname(__file__)
+
 def load_config_yaml(config_path: str) -> Tuple[Dict[str, Any], List[Dict[str, Any]], Dict[str, Any]]:
     """설정 파일을 로드하고 유효성을 검사합니다."""
     try:
