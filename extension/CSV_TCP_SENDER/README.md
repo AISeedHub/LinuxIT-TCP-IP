@@ -5,6 +5,10 @@
 ## Introduction
 Linux_IT will develop gateway for sending environmental data to goverment server. So we are trying to send data from our sensor node to gateway.
 
+## Example Run
+![run_example](assets/run_example.png)
+
+
 ## Features
 * Read AgroTrack Csv data file and convert to json format
 * Send json foramt by TCP/IP 
@@ -21,6 +25,8 @@ Linux_IT will develop gateway for sending environmental data to goverment server
 1. Open `config.yaml` and Edit IP and Port for gateway.
 1. Also, in `config.yaml` edit `csv file path` which created by  AgroTrack
 1. (Optional) change `send_interval_seconds: 20 # seconds` to 600 seconds
+
+![run_example](assets/config.png)
 1. run `uv run python main.py`
 
 ## Test Code
