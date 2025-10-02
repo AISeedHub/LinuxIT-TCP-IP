@@ -8,29 +8,46 @@ import socket
 import logging
 
 # ========= Data Logger =========
-# Set Formatter
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
+def setup_logging():
+    """로깅 설정을 초기화합니다. 중복 설정을 방지합니다."""
+    logger_name = "csv_tcp_sender"
+    logger = logging.getLogger(logger_name)
+    
+    # 이미 핸들러가 설정되어 있으면 중복 설정 방지
+    if logger.handlers:
+        return logger
+    
+    # Set Formatter
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
 
-# Set Basic Config for Logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format=formatter._fmt,
-    datefmt=formatter.datefmt,
-)
+    # Set Basic Config for Logging (console output)
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format=formatter._fmt,
+        datefmt=formatter.datefmt,
+    )
 
-# Logger File Handler
-SCRIPT_DIR = os.path.dirname(__file__)
-os.makedirs(os.path.join(SCRIPT_DIR, 'logs'), exist_ok=True)
-file_handler = logging.FileHandler(os.path.join(SCRIPT_DIR, 'logs', 'csv_tcp_sender.log'), encoding='utf-8')
-file_handler.setLevel(logging.DEBUG)
-file_handler.setFormatter(formatter)
+    # Logger File Handler
+    SCRIPT_DIR = os.path.dirname(__file__)
+    os.makedirs(os.path.join(SCRIPT_DIR, 'logs'), exist_ok=True)
+    file_handler = logging.FileHandler(
+        os.path.join(SCRIPT_DIR, 'logs', 'csv_tcp_sender.log'), 
+        encoding='utf-8'
+    )
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(formatter)
+    
+    # Add handler to logger
+    logger.addHandler(file_handler)
+    logger.setLevel(logging.DEBUG)
+    
+    return logger
 
-
-# Get Logger and Handlers
-logger = logging.getLogger("csv_tcp_sender")
-logger.addHandler(file_handler)
+# Initialize logger
+logger = setup_logging()
 
 def load_config_yaml(config_path):
     with open(config_path, 'r', encoding='utf-8') as f:
@@ -229,10 +246,6 @@ def main():
         # Sleep for next loop
         logger.info(f"Sleep For Next Loop: {sleep_time:.2f} seconds")
         time.sleep(sleep_time)
-
-
-
-
 
 
 if __name__ == "__main__":
