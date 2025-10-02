@@ -121,80 +121,114 @@ def save_cache(cache_path, cache_dict):
     with open(cache_path, 'w', encoding='utf-8') as f:
         yaml.safe_dump(cache_dict, f, allow_unicode=True)
 
+def process_node_data(node_configs, cache):
+    """각 노드의 CSV 데이터를 처리하고 새로운 데이터를 반환"""
+    new_csv_lines_in_node = []
+    
+    for node in node_configs:
+        ext_pos = node.get('ext_pos', '')
+        csv_path = node.get('csv_file_path')
+        node_id = node.get('node_id', csv_path)  # node_id가 없으면 파일 경로로 대체
+        last_dt = cache.get(node_id)
+        
+        if csv_path:
+            logger.info(f"Reading CSV: {csv_path}")
+            csv_lines = read_csv_file(csv_path)
+            logger.info(f"{len(csv_lines)} rows loaded.")
+            
+            # last_dt 이후의 데이터만 추출
+            filtered_rows = []
+            for row in csv_lines:
+                row_dt = row.get('Datetime')
+                if last_dt is None or (row_dt and row_dt > last_dt):
+                    row['ext_pos'] = ext_pos
+                    filtered_rows.append(row)
+            
+            logger.info(f"New {len(filtered_rows)} rows Founded")
+            if filtered_rows:
+                # 최신 Datetime으로 cache 업데이트
+                cache[node_id] = filtered_rows[-1]['Datetime']
+            new_csv_lines_in_node.extend(filtered_rows)
+        else:
+            logger.warning("csv_file_path not found in node config.")
+    
+    return new_csv_lines_in_node
+
+def send_data_if_available(new_csv_lines_in_node, gateway_ip, gateway_port, cache, cache_file):
+    """새로운 데이터가 있으면 전송하고 캐시 저장"""
+    if new_csv_lines_in_node:
+        logger.info(f"전송할 새로운 데이터가 {len(new_csv_lines_in_node)}개 있습니다.")
+        # 마지막 노드의 ext_pos 사용 (모든 노드가 같은 위치라고 가정)
+        ext_pos = new_csv_lines_in_node[-1].get('ext_pos', '') if new_csv_lines_in_node else ''
+        json_str = make_ext_data_json(new_csv_lines_in_node, ext_pos)
+        logger.info(f"전송시도: {gateway_ip}:{gateway_port}")
+        send_json_to_gateway(json_str, gateway_ip, gateway_port)
+        logger.info(f"전송완료: {gateway_ip}:{gateway_port}")
+        save_cache(cache_file, cache)
+    else:
+        logger.info("전송할 새로운 데이터가 없습니다.")
+
+def process_single_loop():
+    """단일 루프 실행"""
+    startTime = time.time()
+    logger.info("========== Start Loop ===========")
+    
+    try:
+        # Load config.yaml
+        CONFIG_FILE = os.path.join(SCRIPT_DIR, 'config.yaml')
+        gateway_config, node_configs, sender_config = load_config_yaml(CONFIG_FILE)
+        gateway_ip = gateway_config.get('ip')
+        gateway_port = int(gateway_config.get('port'))
+        send_interval_seconds = sender_config.get('send_interval_seconds')
+        logger.info("config.yaml 로딩 완료")
+
+        # Load .cache.yaml
+        CACHE_FILE = os.path.join(SCRIPT_DIR, '.cache.yaml')
+        cache = load_cache(CACHE_FILE)
+        logger.info(".cache.yaml 로딩 완료")
+        
+        # Process node data
+        new_csv_lines_in_node = process_node_data(node_configs, cache)
+        
+        # Send data if available
+        send_data_if_available(new_csv_lines_in_node, gateway_ip, gateway_port, cache, CACHE_FILE)
+        
+        return send_interval_seconds
+        
+    except Exception as e:
+        import traceback
+        error_info = traceback.extract_tb(e.__traceback__)[-1]
+        file_name = error_info.filename
+        line_no = error_info.lineno
+        logger.error(f"Error in {file_name} at line {line_no}: {str(e)}")
+        return None
+
+def calculate_sleep_time(send_interval_seconds, start_time):
+    """다음 루프까지의 대기 시간 계산"""
+    if not send_interval_seconds:
+        send_interval_seconds = 20
+        logger.warning(f"Send_interval_seconds not found in config, using default value: {send_interval_seconds} seconds")
+    
+    end_time = time.time()
+    sleep_time = send_interval_seconds - (end_time - start_time)
+    if sleep_time < 0:
+        logger.warning("Sleep time is negative, using 0 seconds")
+        sleep_time = 0
+    
+    return sleep_time
+
 def main():
+    """메인 실행 함수"""
     while True:
-        startTime = time.time()
-        logger.info("========== Start Loop ===========")
-        try:
-            # Load config.yaml
-            CONFIG_FILE = os.path.join(SCRIPT_DIR, 'config.yaml')
-            gateway_config, node_configs, sender_config = load_config_yaml(CONFIG_FILE)
-            gateway_ip = gateway_config.get('ip')
-            gateway_port = int(gateway_config.get('port'))
-            send_interval_seconds = sender_config.get('send_interval_seconds')
-            logger.info("config.yaml 로딩 완료")
-
-            # Load .cache.yaml
-            CACHE_FILE = os.path.join(SCRIPT_DIR, '.cache.yaml')
-            cache = load_cache(CACHE_FILE)
-            logger.info(".cache.yaml 로딩 완료")
-            
-            new_csv_lines_in_node = []
-            for node in node_configs:
-                ext_pos = node.get('ext_pos', '')
-                csv_path = node.get('csv_file_path')
-                node_id = node.get('node_id', csv_path)  # node_id가 없으면 파일 경로로 대체
-                last_dt = cache.get(node_id)
-                if csv_path:
-                    logger.info(f"Reading CSV: {csv_path}")
-                    csv_lines = read_csv_file(csv_path)
-                    logger.info(f"{len(csv_lines)} rows loaded.")
-                    # last_dt 이후의 데이터만 추출
-                    filtered_rows = []
-                    for row in csv_lines:
-                        row_dt = row.get('Datetime')
-                        if last_dt is None or (row_dt and row_dt > last_dt):
-                            row['ext_pos'] = ext_pos
-                            filtered_rows.append(row)
-                    logger.info(f"New {len(filtered_rows)} rows Founded")
-                    if filtered_rows:
-                        # 최신 Datetime으로 cache 업데이트
-                        cache[node_id] = filtered_rows[-1]['Datetime']
-                    new_csv_lines_in_node.extend(filtered_rows)
-                else:
-                    logger.warning("csv_file_path not found in node config.")
-            # JSON 생성 및 전송
-            if new_csv_lines_in_node:
-                logger.info(f"전송할 새로운 데이터가 {len(new_csv_lines_in_node)}개 있습니다.")
-                json_str = make_ext_data_json(new_csv_lines_in_node, ext_pos)
-                logger.info(f"전송시도: {gateway_ip}:{gateway_port}")
-                send_json_to_gateway(json_str, gateway_ip, gateway_port)
-                logger.info(f"전송완료: {gateway_ip}:{gateway_port}")
-                save_cache(CACHE_FILE, cache)
-            else:
-                logger.info("전송할 새로운 데이터가 없습니다.")
-        except Exception as e:
-            import traceback
-            error_info = traceback.extract_tb(e.__traceback__)[-1]
-            file_name = error_info.filename
-            line_no = error_info.lineno
-            logger.error(f"Error in {file_name} at line {line_no}: {str(e)}")
-        finally:
-            # Set default value for send_interval_seconds
-            if 'send_interval_seconds' not in locals() or not send_interval_seconds: # if reading config.yaml is failed
-                send_interval_seconds = 20
-                logger.warning(f"Send_interval_seconds not found in config, using default value: {send_interval_seconds} seconds")
-            
-            # Calculate sleep time
-            endTime = time.time()
-            sleepTime = send_interval_seconds - (endTime - startTime)
-            if sleepTime < 0:
-                logger.warning("Sleep time is negative, using 0 seconds")
-                sleepTime = 0
-
-            # Sleep for next loop
-            logger.info(f"Sleep For Next Loop: {sleepTime:.2f} seconds")
-            time.sleep(sleepTime)
+        start_time = time.time()
+        send_interval_seconds = process_single_loop()
+        
+        # Calculate sleep time
+        sleep_time = calculate_sleep_time(send_interval_seconds, start_time)
+        
+        # Sleep for next loop
+        logger.info(f"Sleep For Next Loop: {sleep_time:.2f} seconds")
+        time.sleep(sleep_time)
 
 
 
