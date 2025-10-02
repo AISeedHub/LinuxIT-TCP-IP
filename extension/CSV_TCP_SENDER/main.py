@@ -6,9 +6,10 @@ import json
 import time
 import socket
 import logging
+from typing import Dict, List, Any, Optional, Tuple
 
 # ========= Data Logger =========
-def setup_logging():
+def setup_logging() -> logging.Logger:
     """로깅 설정을 초기화합니다. 중복 설정을 방지합니다."""
     logger_name = "csv_tcp_sender"
     logger = logging.getLogger(logger_name)
@@ -49,7 +50,7 @@ def setup_logging():
 # Initialize logger
 logger = setup_logging()
 
-def load_config_yaml(config_path):
+def load_config_yaml(config_path: str) -> Tuple[Dict[str, Any], List[Dict[str, Any]], Dict[str, Any]]:
     with open(config_path, 'r', encoding='utf-8') as f:
         config = yaml.safe_load(f)
     
@@ -71,7 +72,7 @@ def load_config_yaml(config_path):
 
     return gateway_config, node_configs, sender_config
 
-def read_csv_file(csv_file_path):
+def read_csv_file(csv_file_path: str) -> List[Dict[str, str]]:
     while True:
         with open(csv_file_path, newline='', encoding='utf-8') as csvfile:
             csv_lines = list(csv.DictReader(csvfile))
@@ -82,7 +83,7 @@ def read_csv_file(csv_file_path):
             logger.warning(f"CSV 파일이 아직 완전히 기록되지 않음. 1초 후 재시도: {csv_file_path}")
             time.sleep(1)
     
-def is_valid_csv_file(csv_lines):
+def is_valid_csv_file(csv_lines: List[Dict[str, str]]) -> bool:
     # To prevent confliction of reading and writing csv file.
     # ex: 2025-06-29 10:00:00 : True
     # ex: 2025-06-29 10: : False
@@ -93,7 +94,7 @@ def is_valid_csv_file(csv_lines):
     except ValueError:
         return False
 
-def make_ext_data_json(data_rows, ext_pos, timestamp=None):
+def make_ext_data_json(data_rows: List[Dict[str, str]], ext_pos: str, timestamp: Optional[str] = None) -> str:
     """
     data_rows: list of dict, 각 dict는 센서 데이터 한 줄
     ext_pos: str, 위치 정보 (예: '37.5665,126.9780')
@@ -122,23 +123,23 @@ def make_ext_data_json(data_rows, ext_pos, timestamp=None):
     
     return json.dumps(jsonDict, ensure_ascii=False, indent=4)
 
-def send_json_to_gateway(json_str, ip, port):
+def send_json_to_gateway(json_str: str, ip: str, port: int) -> None:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.connect((ip, port))
         sock.sendall(json_str.encode('utf-8'))
         logger.info(f"Sent JSON to {ip}:{port} - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
-def load_cache(cache_path):
+def load_cache(cache_path: str) -> Dict[str, Any]:
     if not os.path.exists(cache_path):
         return {}
     with open(cache_path, 'r', encoding='utf-8') as f:
         return yaml.safe_load(f) or {}
 
-def save_cache(cache_path, cache_dict):
+def save_cache(cache_path: str, cache_dict: Dict[str, Any]) -> None:
     with open(cache_path, 'w', encoding='utf-8') as f:
         yaml.safe_dump(cache_dict, f, allow_unicode=True)
 
-def process_node_data(node_configs, cache):
+def process_node_data(node_configs: List[Dict[str, Any]], cache: Dict[str, Any]) -> List[Dict[str, str]]:
     """각 노드의 CSV 데이터를 처리하고 새로운 데이터를 반환"""
     new_csv_lines_in_node = []
     
@@ -171,7 +172,7 @@ def process_node_data(node_configs, cache):
     
     return new_csv_lines_in_node
 
-def send_data_if_available(new_csv_lines_in_node, gateway_ip, gateway_port, cache, cache_file):
+def send_data_if_available(new_csv_lines_in_node: List[Dict[str, str]], gateway_ip: str, gateway_port: int, cache: Dict[str, Any], cache_file: str) -> None:
     """새로운 데이터가 있으면 전송하고 캐시 저장"""
     if new_csv_lines_in_node:
         logger.info(f"전송할 새로운 데이터가 {len(new_csv_lines_in_node)}개 있습니다.")
@@ -185,7 +186,7 @@ def send_data_if_available(new_csv_lines_in_node, gateway_ip, gateway_port, cach
     else:
         logger.info("전송할 새로운 데이터가 없습니다.")
 
-def process_single_loop():
+def process_single_loop() -> Optional[int]:
     """단일 루프 실행"""
     startTime = time.time()
     logger.info("========== Start Loop ===========")
@@ -220,7 +221,7 @@ def process_single_loop():
         logger.error(f"Error in {file_name} at line {line_no}: {str(e)}")
         return None
 
-def calculate_sleep_time(send_interval_seconds, start_time):
+def calculate_sleep_time(send_interval_seconds: Optional[int], start_time: float) -> float:
     """다음 루프까지의 대기 시간 계산"""
     if not send_interval_seconds:
         send_interval_seconds = 20
@@ -234,7 +235,7 @@ def calculate_sleep_time(send_interval_seconds, start_time):
     
     return sleep_time
 
-def main():
+def main() -> None:
     """메인 실행 함수"""
     while True:
         start_time = time.time()
@@ -246,6 +247,10 @@ def main():
         # Sleep for next loop
         logger.info(f"Sleep For Next Loop: {sleep_time:.2f} seconds")
         time.sleep(sleep_time)
+
+
+
+
 
 
 if __name__ == "__main__":
