@@ -129,7 +129,7 @@ def is_valid_csv_file(csv_lines: List[Dict[str, str]]) -> bool:
     # ex: 2025-06-29 10: : False
     try:
         dt_str = csv_lines[-1]['Datetime'][:-1]
-        dt = datetime.strptime(dt_str, "%Y-%m-%d %H:%M:%S")
+        datetime.strptime(dt_str, "%Y-%m-%d %H:%M:%S")
         return True
     except ValueError:
         return False
@@ -239,7 +239,6 @@ def send_data_if_available(new_csv_lines_in_node: List[Dict[str, str]], gateway_
 
 def process_single_loop() -> Optional[int]:
     """단일 루프 실행"""
-    startTime = time.time()
     logger.info("========== Start Loop ===========")
     
     try:
