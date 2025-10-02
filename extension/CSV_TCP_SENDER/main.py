@@ -8,6 +8,19 @@ import socket
 import logging
 from typing import Dict, List, Any, Optional, Tuple
 
+# ========= Custom Exceptions =========
+class ConfigError(Exception):
+    """설정 파일 관련 에러"""
+    pass
+
+class CSVError(Exception):
+    """CSV 파일 처리 관련 에러"""
+    pass
+
+class NetworkError(Exception):
+    """네트워크 통신 관련 에러"""
+    pass
+
 # ========= Data Logger =========
 def setup_logging() -> logging.Logger:
     """로깅 설정을 초기화합니다. 중복 설정을 방지합니다."""
@@ -51,24 +64,34 @@ def setup_logging() -> logging.Logger:
 logger = setup_logging()
 
 def load_config_yaml(config_path: str) -> Tuple[Dict[str, Any], List[Dict[str, Any]], Dict[str, Any]]:
-    with open(config_path, 'r', encoding='utf-8') as f:
-        config = yaml.safe_load(f)
+    """설정 파일을 로드하고 유효성을 검사합니다."""
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = yaml.safe_load(f)
+    except FileNotFoundError:
+        raise ConfigError(f"설정 파일을 찾을 수 없습니다: {config_path}")
+    except yaml.YAMLError as e:
+        raise ConfigError(f"YAML 파일 파싱 에러: {e}")
+    except Exception as e:
+        raise ConfigError(f"설정 파일 로드 중 에러 발생: {e}")
+    
+    if not config:
+        raise ConfigError("설정 파일이 비어있습니다.")
     
     # Check if gateway_config is valid
     gateway_config = config.get('gateway_config', {})
-    if gateway_config is None or len(gateway_config) == 0:
-        raise ValueError("In config.yaml, No gateway_config is founded. Use \ngateway_config:\n  ip: '127.0.0.1'\n  port: 50020")
+    if not gateway_config or len(gateway_config) == 0:
+        raise ConfigError("gateway_config가 없습니다. 다음 형식을 사용하세요:\ngateway_config:\n  ip: '127.0.0.1'\n  port: 50020")
 
     # Check if node_config is valid
     node_configs = config.get('node_config', [])
-    if node_configs is None or len(node_configs) == 0:
-        raise ValueError("In config.yaml, No node_config is founded. Use \nnode_config:\n  - slave_id: '1'\n    csv_file_path: 'path/to/csv'\n    ext_pos: '37.5665,126.9780'")
+    if not node_configs or len(node_configs) == 0:
+        raise ConfigError("node_config가 없습니다. 다음 형식을 사용하세요:\nnode_config:\n  - slave_id: '1'\n    csv_file_path: 'path/to/csv'\n    ext_pos: '37.5665,126.9780'")
 
     # Check if sender_config is valid
     sender_config = config.get('sender_config', {})
-    if sender_config is None or len(sender_config) == 0:
-        raise ValueError("In config.yaml, No sender_config is founded. Use \nsender_config:\n  send_interval_seconds: 20")
-    sender_config = config.get('sender_config', {})
+    if not sender_config or len(sender_config) == 0:
+        raise ConfigError("sender_config가 없습니다. 다음 형식을 사용하세요:\nsender_config:\n  send_interval_seconds: 20")
 
     return gateway_config, node_configs, sender_config
 
