@@ -2,13 +2,12 @@
 * Author : Heonzoo
 * version : Python 3.10.18
 
-# Dependencies
-* PyYAML==6.0.2
-
 # Introduction
 Linux_IT will develop gateway for sending environmental data to goverment server. So we are trying to send data from our sensor node to gateway.
 
-`virtual_gateway.py` is simulating the Linux_IT gateway simply echo the tcp received.
+# Dependencies
+* uv - [get-started](https://docs.astral.sh/uv/getting-started/installation/)
+
 
 # How to Run
 1. Open `config.yaml` and Edit IP and Port for gateway. (If no gateway exist, use `virtual_gateway.py` for temporal test. run `python virtual_gateway.py`)
