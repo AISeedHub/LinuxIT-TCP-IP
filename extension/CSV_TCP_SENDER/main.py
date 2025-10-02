@@ -96,15 +96,29 @@ def load_config_yaml(config_path: str) -> Tuple[Dict[str, Any], List[Dict[str, A
     return gateway_config, node_configs, sender_config
 
 def read_csv_file(csv_file_path: str) -> List[Dict[str, str]]:
-    while True:
-        with open(csv_file_path, newline='', encoding='utf-8') as csvfile:
-            csv_lines = list(csv.DictReader(csvfile))
+    """CSV 파일을 읽고 유효성을 검사합니다."""
+    max_retries = 10  # 최대 재시도 횟수
+    retry_count = 0
+    
+    while retry_count < max_retries:
+        try:
+            with open(csv_file_path, newline='', encoding='utf-8') as csvfile:
+                csv_lines = list(csv.DictReader(csvfile))
 
-        if is_valid_csv_file(csv_lines):
-            return csv_lines
-        else:
-            logger.warning(f"CSV 파일이 아직 완전히 기록되지 않음. 1초 후 재시도: {csv_file_path}")
-            time.sleep(1)
+            if is_valid_csv_file(csv_lines):
+                return csv_lines
+            else:
+                retry_count += 1
+                logger.warning(f"CSV 파일이 아직 완전히 기록되지 않음. 재시도 {retry_count}/{max_retries}: {csv_file_path}")
+                time.sleep(1)
+        except FileNotFoundError:
+            raise CSVError(f"CSV 파일을 찾을 수 없습니다: {csv_file_path}")
+        except PermissionError:
+            raise CSVError(f"CSV 파일에 접근 권한이 없습니다: {csv_file_path}")
+        except Exception as e:
+            raise CSVError(f"CSV 파일 읽기 중 에러 발생: {e}")
+    
+    raise CSVError(f"CSV 파일이 {max_retries}번의 재시도 후에도 유효하지 않습니다: {csv_file_path}")
     
 def is_valid_csv_file(csv_lines: List[Dict[str, str]]) -> bool:
     # To prevent confliction of reading and writing csv file.
