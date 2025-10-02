@@ -161,10 +161,21 @@ def make_ext_data_json(data_rows: List[Dict[str, str]], ext_pos: str, timestamp:
     return json.dumps(jsonDict, ensure_ascii=False, indent=4)
 
 def send_json_to_gateway(json_str: str, ip: str, port: int) -> None:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.connect((ip, port))
-        sock.sendall(json_str.encode('utf-8'))
-        logger.info(f"Sent JSON to {ip}:{port} - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    """게이트웨이로 JSON 데이터를 전송합니다."""
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.settimeout(10)  # 10초 타임아웃 설정
+            sock.connect((ip, port))
+            sock.sendall(json_str.encode('utf-8'))
+            logger.info(f"Sent JSON to {ip}:{port} - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    except socket.timeout:
+        raise NetworkError(f"게이트웨이 연결 타임아웃: {ip}:{port}")
+    except socket.connectionRefusedError:
+        raise NetworkError(f"게이트웨이 연결 거부됨: {ip}:{port}")
+    except socket.gaierror as e:
+        raise NetworkError(f"게이트웨이 주소 해석 실패: {ip}:{port} - {e}")
+    except Exception as e:
+        raise NetworkError(f"게이트웨이 통신 중 에러 발생: {e}")
 
 def load_cache(cache_path: str) -> Dict[str, Any]:
     if not os.path.exists(cache_path):
