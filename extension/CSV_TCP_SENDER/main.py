@@ -307,10 +307,5 @@ def main() -> None:
         logger.info(f"Sleep For Next Loop: {sleep_time:.2f} seconds")
         time.sleep(sleep_time)
 
-
-
-
-
-
 if __name__ == "__main__":
     main()
