@@ -85,7 +85,7 @@ class TestEndToEndFlow:
         
         # 캐시 파일 생성 (모든 데이터가 이미 처리됨)
         cache_path = os.path.join(temp_dir, '.cache.yaml')
-        cache = {'test_node': '2025-10-01 10:02:00,'}
+        cache = {'test_node': '2025-10-01 10:02:00'}
         with open(cache_path, 'w', encoding='utf-8') as f:
             yaml.safe_dump(cache, f)
         
