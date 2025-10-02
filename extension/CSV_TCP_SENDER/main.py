@@ -261,12 +261,21 @@ def process_single_loop() -> Optional[int]:
         
         return send_interval_seconds
         
+    except ConfigError as e:
+        logger.error(f"설정 에러: {e}")
+        return None
+    except CSVError as e:
+        logger.error(f"CSV 처리 에러: {e}")
+        return None
+    except NetworkError as e:
+        logger.error(f"네트워크 에러: {e}")
+        return None
     except Exception as e:
         import traceback
         error_info = traceback.extract_tb(e.__traceback__)[-1]
         file_name = error_info.filename
         line_no = error_info.lineno
-        logger.error(f"Error in {file_name} at line {line_no}: {str(e)}")
+        logger.error(f"예상치 못한 에러 in {file_name} at line {line_no}: {str(e)}")
         return None
 
 def calculate_sleep_time(send_interval_seconds: Optional[int], start_time: float) -> float:
