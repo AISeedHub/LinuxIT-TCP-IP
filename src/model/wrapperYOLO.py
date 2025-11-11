@@ -37,7 +37,7 @@ class PearModel:
         self.logger.log(f"Using device: {self.device}")
 
         try:
-            self.model = YOLO(config.model_path, task="detect")
+            self.model = timm.create_model('efficientnet_b3', pretrained=False, 8)
             self.names = config.classes
             self.confidence = config.confidence_threshold
             self.logger.log("Model loaded successfully")
