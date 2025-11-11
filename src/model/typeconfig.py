@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 @dataclass
 class ModelConfig:
+    preprocessor_path: str
     model_path: str
     img_path: str
     confidence_threshold: float = 0.9
@@ -25,4 +26,4 @@ class DetectionResult:
     error: Error
     is_normal: int
     confidence: float
-    bbox: Optional[Tuple[float, float, float, float]]
+    class_index: int

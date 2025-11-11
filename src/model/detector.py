@@ -63,12 +63,12 @@ class PearDetector:
             if os.path.exists(dir_img) is False:
                 logger.error(f"Image not found: {dir_img}")
                 return DetectionResult(Error(non_img=True),
-                                       is_normal=False, confidence=0.0, bbox=None)
+                                       is_normal=False, confidence=0.0,class_index=None)
             img = cv2.imread(dir_img)
             return await self.detect(img)
         except Exception as e:
             logger.error(f"Inference error: {e}")
-            return DetectionResult(Error(error=True, non_detect=True), is_normal=False, confidence=0.0, bbox=None)
+            return DetectionResult(Error(error=True, non_detect=True), is_normal=False, confidence=0.0,class_index=None)
 
     async def detect(self, image: np.ndarray) -> DetectionResult:
         if self.model is None:
@@ -76,25 +76,8 @@ class PearDetector:
 
         try:
             # Run inference
-            result, predictions = self.model.predict(image)
+            result, class_index = self.model.predict(image)
 
-            # Uncomment to run Debug: Save image with predictions
-            # await save_predictions_image(image, predictions)
-
-            if len(predictions) == 0:  # No detections
-                return DetectionResult(
-                    error=Error(non_detect=True),
-                    is_normal=1,  # No detection usually means 1
-                    confidence=0.0,
-                    bbox=None
-                )
-            else:
-                return DetectionResult(
-                    error=Error(),
-                    is_normal=int(result),  # Defective
-                    confidence=float(predictions[0][5]),
-                    bbox=tuple(predictions[0][:4])
-                )
 
         except Exception as e:
             logger.error(f"Inference error: {e}")

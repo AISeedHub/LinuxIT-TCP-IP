@@ -2,10 +2,12 @@ import torch
 from torchvision import transforms
 from ultralytics import YOLO
 import timm
-from typing import Tuple
+from typing import Tuple,Optional
 import numpy as np
 import time
 import sys
+import cv2
+from PIL import Image
 
 from src.model import ModelConfig
 
@@ -44,7 +46,7 @@ class PearModel:
             self.model = timm.create_model('efficientnet_b3', pretrained=False, num_classes=8)
             self.model.to(self.device)
             self.model.eval()
-            self.preprocessor = YOLO(config["model_path"], task="detect")
+            self.preprocessor = YOLO(config["preprocessor_path"], task="detect")
             self.preprocessor.to(self.device)
             self.preprocessor.eval()
             self.names = config.classes
@@ -104,7 +106,8 @@ class PearModel:
             img (np.ndarray): Input image in BGR format.
             conf (float): Confidence threshold for detection.
         Returns:
-            np.ndarray: Array of detected bounding boxes, classes, and scores.
+            np.ndarray: Array of detected bounding boxes and classes.
+                    Shape: (N, 5) → [x1, y1, x2, y2, cls]
         """
         try:
             results = self.preprocessor.predict(img)
@@ -122,82 +125,114 @@ class PearModel:
             self.logger.error(f"Detection error: {e}")
             return np.array([])
 
-
-    def __crop_object_area(self, img: np.ndarray, conf: float) -> list[np.ndarray]:
-        """Detect and crop pears from the image
-        Args:
-            img (np.ndarray): Input image in BGR format.
-            conf (float): Confidence threshold for detection.
-        Returns:
-            List[np.ndarray]: List of cropped pear images.
-        """
-        try:
-            detections = self.__detect(img, conf)
-            bboxes = detections[:, :4].astype(int).tolist()
-            crops = __crop_by_bounding_boxes(img, bboxes)
-            return crops
-        except Exception as e:
-            self.logger.error(f"Cropping error: {e}")
-            return []
-    
-
-    def __post_process(self, pred: np.ndarray) -> np.ndarray:
-        """Post-process the predictions"""
-        # ensure that defect boxes are inside the fruit boxes
-        # extract the defect boxes and fruit boxes
-
-        return pred
-
     def predict(self, img: np.ndarray) -> Tuple[bool, np.ndarray]:
         """
         This is the main function to run inference on the input image. This function will be called outside the class.
         """
         return self.__one_step_inference(img)
+        
+    def __crop_object_area(self, img: np.ndarray, conf: float) -> Optional[np.ndarray]:
+        """
+        Finds the first class-0 bounding box (after confidence filtering)
+        and returns a single cropped image for that region.
+
+        Args:
+            img (np.ndarray): Input image in BGR format (H x W x 3).
+            conf (float): Confidence threshold.
+
+        Returns:
+            np.ndarray | None: Cropped image corresponding to the selected box.
+                            Returns None if no valid class-0 box is found.
+        """
+        try:
+            detections = self.__detect(img, conf)
+            # detections shape: (N, 5) → [x1, y1, x2, y2, cls]
+            if detections is None or detections.size == 0:
+                self.logger.warning("No detections found.")
+                return None
+
+            # Filter class-0 detections
+            cls_ids = detections[:, 4].astype(int)
+            mask_cls0 = cls_ids == 0
+            cls0_dets = detections[mask_cls0]
+
+            if cls0_dets.size == 0:
+                self.logger.warning("No class-0 detections found.")
+                return None
+
+            # Select the first class-0 box
+            best_box = cls0_dets[0, :4].astype(int)  # [x1, y1, x2, y2]
+
+            x1, y1, x2, y2 = best_box
+
+            # Clamp to image bounds
+            h, w = img.shape[:2]
+            x1 = max(0, min(x1, w))
+            y1 = max(0, min(y1, h))
+            x2 = max(0, min(x2, w))
+            y2 = max(0, min(y2, h))
+
+            if x2 <= x1 or y2 <= y1:
+                self.logger.error(f"Invalid bbox after clipping: {(x1, y1, x2, y2)}")
+                return None
+
+            crop = img[y1:y2, x1:x2].copy()
+            return crop
+
+        except Exception as e:
+            self.logger.error(f"Cropping error: {e}")
+            return None
+
 
     def __one_step_inference(self, img: np.ndarray) -> Tuple[bool, np.ndarray]:
-        """Run one step inference and return the predictions
+        """Run one step inference and return classification-based result
         Args:
             img (np.ndarray): Input image in BGR format.
         Returns:
-            Tuple[int, np.ndarray]: A tuple containing the result (1 for defect detected, 0 for no defect) and the predictions.
+            Tuple[bool, np.ndarray]: (is_normal, pred_array) where pred_array holds class index.
         """
         croped_area = self.__crop_object_area(img, self.confidence)
 
-        pred = self.model(self.transform(croped_area))
-        # Post-process the predictions
-        pred = self.__post_process(pred)
+        # ----------------------------------------
+        # 1) If no valid cropped area: use default (assume normal class 0)
+        # ----------------------------------------
+        if croped_area is None:
+            self.logger.log("No valid cropped area found. Using default prediction.", level="WARNING")
+            # Treat class 0 as normal
+            return True, np.array([0], dtype=np.int32)
 
-        labels = [self.names[int(cat)] for cat in pred[:, 4]]
-
-        if any([label == "defect" for label in labels]):
-            return False, pred  # Return False if any defect is detected
         else:
-            return True, pred  # Return True if no defect is detected
+            # If a list is returned, use the first element
+            if isinstance(croped_area, list):
+                if len(croped_area) == 0:
+                    self.logger.log("Empty crop list. Using default prediction.", level="WARNING")
+                    return True, 0
+                else:
+                    crop_img = croped_area[0]
+            else:
+                crop_img = croped_area
 
-    def __two_step_inference(self, img: np.ndarray) -> Tuple[bool, np.ndarray]:
-        """Run inference and return result and boxes
-        Args:
-            img (np.ndarray): Input image in BGR format.
-        Returns:
-            Tuple[int, np.ndarray]: A tuple containing the result (1 for defect detected, 0 for no defect) and the predictions."""
-        pred = self.detect(img)
-        # check the fruit boxes appeared in the image, if yes, crop the fruit boxes and run prediction on the cropped image
-        for box in pred:
-            x1, y1, x2, y2 = map(int, box[:4])
-            x1, y1, x2, y2 = x1 - 10, y1 - 10, x2 + 10, y2 + 10  # Add padding
-            if box[4] == 0:  # Assuming class 0 is the fruit class
-                fruit_box = img[y1:y2, x1:x2]
-                fruit_pred = self.detect(fruit_box)
-                # Check if any defect is detected in the fruit box, if yes, recalibrate the defect boxes
-                if len(fruit_pred) > 0:
-                    defect_boxes = fruit_pred[fruit_pred[:, 4] == 1]
-                    if len(defect_boxes) > 0:
-                        defect_boxes[:, :4] += np.array([x1, y1, x1, y1])
-                        pred = np.vstack((pred, defect_boxes))  # Append defect boxes to the original prediction
+            # Step 2: Convert BGR ndarray -> RGB -> PIL -> transform -> Tensor
+            img_rgb = cv2.cvtColor(crop_img, cv2.COLOR_BGR2RGB)
+            pil_img = Image.fromarray(img_rgb)
 
-        labels = [self.names[int(cat)] for cat in pred[:, 4]]
+            input_tensor = self.transform(pil_img)      # (3, 512, 512)
+            input_tensor = input_tensor.unsqueeze(0)    # (1, 3, 512, 512)
+            input_tensor = input_tensor.to(self.device)
 
-        if any([label == "defect" for label in labels]):
-            return False, pred
-        else:
-            return True, pred
+            # Step 3: Run classification and decide normal/abnormal by class index
+            with torch.no_grad():
+                logits = self.model(input_tensor)       # assume (1, num_classes)
+                if logits.ndim == 1:
+                    logits = logits.unsqueeze(0)
+                probs = torch.softmax(logits, dim=1)[0] # (num_classes,)
+
+            class_idx = int(torch.argmax(probs).item())
+
+            # Log predicted class index
+            self.logger.log(f"Predicted class index: {class_idx}", level="INFO")
+
+            # Class 0 is normal; others are abnormal
+            is_normal = (class_idx == 0)
+            return is_normal, np.array([class_idx], dtype=np.int32)
+
