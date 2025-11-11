@@ -43,10 +43,14 @@ class PearModel:
         self.logger.log(f"Using device: {self.device}")
 
         try:
-            self.model = timm.create_model('efficientnet_b3', pretrained=False, num_classes=8)
+            self.model = timm.create_model('efficientnet_b3', pretrained=False, num_classes=config.num_classes)
+            prev_ = torch.load(config.model_path, map_location='cpu')
+            ckpt = prev_.state_dict()
+            self.model.load_state_dict(ckpt)
             self.model.to(self.device)
             self.model.eval()
-            self.preprocessor = YOLO(config["preprocessor_path"], task="detect")
+
+            self.preprocessor = YOLO(config.preprocessor_path, task="detect")
             self.preprocessor.to(self.device)
             self.preprocessor.eval()
             self.names = config.classes
@@ -184,7 +188,7 @@ class PearModel:
             return None
 
 
-    def __one_step_inference(self, img: np.ndarray) -> Tuple[bool, np.ndarray]:
+    def __one_step_inference(self, img: np.ndarray) -> Tuple[bool, int]:
         """Run one step inference and return classification-based result
         Args:
             img (np.ndarray): Input image in BGR format.
@@ -234,5 +238,5 @@ class PearModel:
 
             # Class 0 is normal; others are abnormal
             is_normal = (class_idx == 0)
-            return is_normal, np.array([class_idx], dtype=np.int32)
+            return is_normal, class_idx
 

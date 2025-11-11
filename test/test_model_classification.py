@@ -25,6 +25,8 @@ class TestPearDetector:
     def detector(self):
         config = ModelConfig(
             model_path=os.path.join(MODEL_PATH, MODEL_DEFAULT),
+            preprocessor_path=PREPROCESSOR_PATH,
+            num_classes=NUM_CLASSES,
             classes=CLASSES,
             img_path=IMG_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD

@@ -37,6 +37,7 @@ class PearDetector:
         bk_model_name = self.config.model_path
         try:
             self.config.model_path = model_path
+            self.config.preprocessor_path = preprocessor_path
             self.load_model()
             logger.info(f"Model changed to {model_path}")
         except Exception as e:
@@ -48,7 +49,7 @@ class PearDetector:
     def load_model(self, model_path: Optional[str] = None):
         try:
             path = model_path or self.config.model_path
- 
+            preprocessor_path = model_path or self.config.preprocessor_path
             self.model = PearModel(self.config)
             logger.info(f"Model loaded successfully from {path}")
             logger.info(f"Model device: {self.device}")
@@ -98,5 +99,7 @@ class PearDetector:
                      f"Confidence threshold: {self.config.confidence_threshold}\n" \
                      f"Device: {self.config.device}\n" \
                      f"Image size: {self.config.img_size}\n" \
-                     f"Classes: {self.config.classes}"
+                     f"Classes: {self.config.classes}\n"\
+                     f"Preprocessor path: {self.config.preprocessor_path}\n"\
+                     f"Num classes: {self.config.num_classes}"
         return str_format

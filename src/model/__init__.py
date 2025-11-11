@@ -6,10 +6,12 @@ from typing import Optional, Tuple
 class ModelConfig:
     model_path: str
     img_path: str
+    preprocessor_path: str
     confidence_threshold: float = 0.9
     device: str = 'cuda' if torch.cuda.is_available() else 'cpu'
     img_size: int = 640
     classes: Tuple[str] = ('defective', 'non-defective')
+    num_classes: int = 8
 
 
 @dataclass
