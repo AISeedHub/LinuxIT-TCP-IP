@@ -48,7 +48,7 @@ class PearDetector:
     def load_model(self, model_path: Optional[str] = None):
         try:
             path = model_path or self.config.model_path
-            # self.model = YOLO(path, task="detect")
+ 
             self.model = PearModel(self.config)
             logger.info(f"Model loaded successfully from {path}")
             logger.info(f"Model device: {self.device}")
