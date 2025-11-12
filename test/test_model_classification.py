@@ -2,11 +2,21 @@ import os
 import sys
 import time
 import pytest
+from pathlib import Path
 import numpy as np
 import cv2
 from typing import List
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+CURRENT_DIR = os.path.abspath(os.path.dirname(__file__))
+PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, '..'))
+
+# 1) ensure local test/configs.py is used
+if CURRENT_DIR not in sys.path:
+    sys.path.insert(0, CURRENT_DIR)
+
+# 2) ensure 'src' (project root) is importable
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(1, PROJECT_ROOT)
 
 from src.model.detector import PearDetector, ModelConfig, DetectionResult
 from src.utils.exceptions import ModelError
@@ -26,7 +36,6 @@ class TestPearDetector:
         config = ModelConfig(
             model_path=os.path.join(MODEL_PATH, MODEL_DEFAULT),
             preprocessor_path=PREPROCESSOR_PATH,
-            num_classes=NUM_CLASSES,
             classes=CLASSES,
             img_path=IMG_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD
@@ -103,25 +112,27 @@ class TestPearDetector:
         assert detector.model is not None
 
     @pytest.mark.asyncio
-    async def test_inference_performance(self, detector, test_image):
-        # Perform multiple inferences and measure time
-        num_iterations = 5
-        total_time = 0
+    async def test_inference_performance(self, detector, all_image_paths):
+        # Measure average inference time across all images under IMG_PATH
+        total_time = 0.0
+        num_runs = 0
 
-        for _ in range(num_iterations):
+        for p in all_image_paths:
+            img = cv2.imread(str(p))
+            assert img is not None, f"Failed to read image: {p}"
+
             start_time = time.time()
-            result = await detector.detect(test_image)
+            result = await detector.detect(img)
             end_time = time.time()
 
             # Verify result is valid
-            assert isinstance(result, DetectionResult)
+            assert isinstance(result, DetectionResult), f"Invalid result for {p}"
 
-            # Add to total time
             total_time += (end_time - start_time)
+            num_runs += 1
 
-        # Calculate average time
-        avg_time = total_time / num_iterations
-        print(f"Average inference time: {avg_time:.4f} seconds")
+        avg_time = total_time / max(1, num_runs)
+        print(f"Average inference time over {num_runs} images: {avg_time:.4f} seconds")
 
         # No strict assertion on performance, but log it for monitoring
         assert avg_time > 0  # Just ensure time is measured
@@ -164,3 +175,25 @@ class TestPearDetector:
         result = await detector.inference(img_path)
         assert isinstance(result, DetectionResult)
         assert isinstance(result.is_normal, int)
+
+    @pytest.fixture
+    def all_image_paths(self):
+        """Collect all image file paths under IMG_PATH recursively."""
+        base = Path(IMG_PATH)
+        if not base.exists():
+            pytest.skip(f"Image directory not found: {base}")
+        exts = {".jpg", ".jpeg", ".png", ".bmp"}
+        paths = [p for p in base.rglob("*") if p.suffix.lower() in exts]
+        if not paths:
+            pytest.skip(f"No images found under: {base}")
+        return paths
+
+    @pytest.mark.asyncio
+    async def test_inference_on_all_images(self, detector, all_image_paths):
+        for p in all_image_paths:
+            img = cv2.imread(str(p))
+            assert img is not None, f"Failed to read image: {p}"
+            result = await detector.detect(img)
+            assert isinstance(result, DetectionResult), f"Invalid result for {p}"
+            assert isinstance(result.is_normal, int)
+            assert 0.0 <= result.confidence <= 1.0

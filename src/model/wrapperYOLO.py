@@ -22,6 +22,16 @@ class Logger:
         print(f"[{timestamp:.2f}s] {level} - {self.name}: {message}")
         sys.stdout.flush()
 
+    # add simple wrappers
+    def info(self, message: str) -> None:
+        self.log(message, "INFO")
+
+    def warning(self, message: str) -> None:
+        self.log(message, "WARNING")
+
+    def error(self, message: str) -> None:
+        self.log(message, "ERROR")
+
 
 class PearModel:
     """
@@ -43,7 +53,7 @@ class PearModel:
         self.logger.log(f"Using device: {self.device}")
 
         try:
-            self.model = timm.create_model('efficientnet_b3', pretrained=False, num_classes=config.num_classes)
+            self.model = timm.create_model('efficientnet_b3', pretrained=False, num_classes=8)
             prev_ = torch.load(config.model_path, map_location='cpu')
             ckpt = prev_.state_dict()
             self.model.load_state_dict(ckpt)
@@ -188,7 +198,7 @@ class PearModel:
             return None
 
 
-    def __one_step_inference(self, img: np.ndarray) -> Tuple[bool, int]:
+    def __one_step_inference(self, img: np.ndarray) -> Tuple[bool, np.ndarray]:
         """Run one step inference and return classification-based result
         Args:
             img (np.ndarray): Input image in BGR format.
@@ -203,14 +213,16 @@ class PearModel:
         if croped_area is None:
             self.logger.log("No valid cropped area found. Using default prediction.", level="WARNING")
             # Treat class 0 as normal
-            return True, np.array([0], dtype=np.int32)
+            return True, np.array([])
+
 
         else:
             # If a list is returned, use the first element
             if isinstance(croped_area, list):
                 if len(croped_area) == 0:
                     self.logger.log("Empty crop list. Using default prediction.", level="WARNING")
-                    return True, 0
+                    return True, np.array([])
+
                 else:
                     crop_img = croped_area[0]
             else:
@@ -223,7 +235,7 @@ class PearModel:
             input_tensor = self.transform(pil_img)      # (3, 512, 512)
             input_tensor = input_tensor.unsqueeze(0)    # (1, 3, 512, 512)
             input_tensor = input_tensor.to(self.device)
-
+   
             # Step 3: Run classification and decide normal/abnormal by class index
             with torch.no_grad():
                 logits = self.model(input_tensor)       # assume (1, num_classes)
@@ -238,5 +250,6 @@ class PearModel:
 
             # Class 0 is normal; others are abnormal
             is_normal = (class_idx == 0)
-            return is_normal, class_idx
+           
+            return is_normal, np.array([class_idx])
 

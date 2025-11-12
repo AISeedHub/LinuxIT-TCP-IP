@@ -11,7 +11,7 @@ class ModelConfig:
     device: str = 'cuda' if torch.cuda.is_available() else 'cpu'
     img_size: int = 640
     classes: Tuple[str] = ('defective', 'non-defective')
-    num_classes: int = 8
+
 
 
 @dataclass

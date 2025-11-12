@@ -64,12 +64,13 @@ class PearDetector:
             if os.path.exists(dir_img) is False:
                 logger.error(f"Image not found: {dir_img}")
                 return DetectionResult(Error(non_img=True),
-                                       is_normal=False, confidence=0.0,class_index=None)
+                                       is_normal=False, confidence=0.0,bbox=None)
             img = cv2.imread(dir_img)
             return await self.detect(img)
+      
         except Exception as e:
             logger.error(f"Inference error: {e}")
-            return DetectionResult(Error(error=True, non_detect=True), is_normal=False, confidence=0.0,class_index=None)
+            return DetectionResult(Error(error=True, non_detect=True), is_normal=False, confidence=0.0,bbox=None)
 
     async def detect(self, image: np.ndarray) -> DetectionResult:
         if self.model is None:
@@ -77,8 +78,24 @@ class PearDetector:
 
         try:
             # Run inference
-            result, class_index = self.model.predict(image)
+            result, predictions = self.model.predict(image)
 
+            if len(predictions) == 0:  # No detections
+                self.model.logger.log(f"No detections{predictions,predictions.shape}", level="INFO")
+                return DetectionResult(
+                    error=Error(non_detect=True),
+                    is_normal=1,  # No detection usually means 1
+                    confidence=0.0,
+                    bbox= None
+                )
+            else:
+                self.model.logger.log(f"Detections{predictions,predictions.shape,int(result)}", level="INFO")
+                return DetectionResult(
+                    error=Error(),
+                    is_normal=1, #int(result),  # Defective
+                    confidence=0.0,
+                    bbox= None
+                )
 
         except Exception as e:
             logger.error(f"Inference error: {e}")
@@ -99,7 +116,5 @@ class PearDetector:
                      f"Confidence threshold: {self.config.confidence_threshold}\n" \
                      f"Device: {self.config.device}\n" \
                      f"Image size: {self.config.img_size}\n" \
-                     f"Classes: {self.config.classes}\n"\
-                     f"Preprocessor path: {self.config.preprocessor_path}\n"\
-                     f"Num classes: {self.config.num_classes}"
+                     f"Preprocessor path: {self.config.preprocessor_path}"
         return str_format
