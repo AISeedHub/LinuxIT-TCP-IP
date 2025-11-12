@@ -34,15 +34,26 @@ class PearDetector:
 
     def change_model(self, model_path: str):
         bk_model = self.model
-        bk_model_name = self.config.model_path
+        bk_classifier_path = self.config.model_path
+        bk_preproc_path = getattr(self.config, "preprocessor_path", None)
         try:
-            self.config.model_path = model_path
-            self.config.preprocessor_path = preprocessor_path
+            def _resolve(base_dir, p):
+                return p if os.path.isabs(p) else os.path.normpath(os.path.join(base_dir, p))
+
+            if model_path.lower().endswith(".pt"):
+                base = os.path.dirname(bk_preproc_path) or os.path.dirname(bk_classifier_path)
+                self.config.preprocessor_path = _resolve(base, model_path)
+            else:
+                base = os.path.dirname(bk_classifier_path)
+                self.config.model_path = _resolve(base, model_path)
+
             self.load_model()
             logger.info(f"Model changed to {model_path}")
         except Exception as e:
             self.model = bk_model
-            self.config.model_path = bk_model_name
+            self.config.model_path = bk_classifier_path
+            if hasattr(self.config, "preprocessor_path"):
+                self.config.preprocessor_path = bk_preproc_path
             logger.error(f"Failed to change model: {e}")
             raise ModelError(f"Model change failed: {e}")
 
@@ -86,13 +97,13 @@ class PearDetector:
                     error=Error(non_detect=True),
                     is_normal=1,  # No detection usually means 1
                     confidence=0.0,
-                    bbox= None
+                    bbox= None,
                 )
             else:
                 self.model.logger.log(f"Detections{predictions,predictions.shape,int(result)}", level="INFO")
                 return DetectionResult(
                     error=Error(),
-                    is_normal=1, #int(result),  # Defective
+                    is_normal=int(result),  # Defective
                     confidence=0.0,
                     bbox= None
                 )

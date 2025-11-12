@@ -28,3 +28,4 @@ class DetectionResult:
     is_normal: int
     confidence: float
     bbox: Optional[Tuple[float, float, float, float]]
+

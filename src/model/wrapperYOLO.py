@@ -53,7 +53,8 @@ class PearModel:
         self.logger.log(f"Using device: {self.device}")
 
         try:
-            self.model = timm.create_model('efficientnet_b3', pretrained=False, num_classes=8)
+            #self.model = timm.create_model('efficientnet_b3', pretrained=False, num_classes=8)
+            self.model = timm.create_model('convnextv2_base', pretrained=False, num_classes=8)
             prev_ = torch.load(config.model_path, map_location='cpu')
             ckpt = prev_.state_dict()
             self.model.load_state_dict(ckpt)
@@ -227,11 +228,10 @@ class PearModel:
                     crop_img = croped_area[0]
             else:
                 crop_img = croped_area
-
-            # Step 2: Convert BGR ndarray -> RGB -> PIL -> transform -> Tensor
-            img_rgb = cv2.cvtColor(crop_img, cv2.COLOR_BGR2RGB)
-            pil_img = Image.fromarray(img_rgb)
-
+    
+            RGB_crop_img = cv2.cvtColor(crop_img, cv2.COLOR_BGR2RGB)
+            pil_img = Image.fromarray(RGB_crop_img)
+            
             input_tensor = self.transform(pil_img)      # (3, 512, 512)
             input_tensor = input_tensor.unsqueeze(0)    # (1, 3, 512, 512)
             input_tensor = input_tensor.to(self.device)
@@ -243,6 +243,11 @@ class PearModel:
                     logits = logits.unsqueeze(0)
                 probs = torch.softmax(logits, dim=1)[0] # (num_classes,)
 
+            normal_idx = 0              # if you already set self.normal_class_index, use that instead
+            alpha = 2.0                 # tuning parameter: 1.2~2.0 is common; increase to reduce FP
+            probs[normal_idx] = probs[normal_idx] * alpha
+            probs = probs / probs.sum() # re-normalize
+            self.logger.log(f"probs: {probs}", level="INFO")
             class_idx = int(torch.argmax(probs).item())
 
             # Log predicted class index
