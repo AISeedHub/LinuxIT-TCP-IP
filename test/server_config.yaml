@@ -10,7 +10,7 @@ model:
   model_path: efficientnetb3_512_version2.pth
   #model_path: C:\Users\IE\Downloads\model (6).pth
   preprocessor_path: best-2cls.pt
-  img_path: "D:/linuxit/깍지"
+  img_path: "test_img/normal0"
   confidence_threshold: 0.5
   img_size: 640
   num_classes: 8
