@@ -53,8 +53,8 @@ class PearModel:
         self.logger.log(f"Using device: {self.device}")
 
         try:
-            #self.model = timm.create_model('efficientnet_b3', pretrained=False, num_classes=8)
-            self.model = timm.create_model('convnextv2_base', pretrained=False, num_classes=8)
+            self.model = timm.create_model('efficientnet_b3', pretrained=False, num_classes=8)
+            #self.model = timm.create_model('convnextv2_base', pretrained=False, num_classes=8)
             prev_ = torch.load(config.model_path, map_location='cpu')
             ckpt = prev_.state_dict()
             self.model.load_state_dict(ckpt)
@@ -247,7 +247,7 @@ class PearModel:
             alpha = 2.0                 # tuning parameter: 1.2~2.0 is common; increase to reduce FP
             probs[normal_idx] = probs[normal_idx] * alpha
             probs = probs / probs.sum() # re-normalize
-            self.logger.log(f"probs: {probs}", level="INFO")
+            #self.logger.log(f"probs: {probs}", level="INFO")
             class_idx = int(torch.argmax(probs).item())
 
             # Log predicted class index

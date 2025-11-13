@@ -1,7 +1,7 @@
 # test/configs.py
 import os, yaml
 
-YAML_PATH = os.path.join(r"D:\GitHub_repo\LinuxIT-TCP-IP\config\server_config.yaml")
+YAML_PATH = os.path.join(r"server_config.yaml")
 with open(YAML_PATH, "r", encoding="utf-8") as f:
     cfg = yaml.safe_load(f)
 m = cfg["model"]
