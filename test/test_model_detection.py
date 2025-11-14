@@ -11,7 +11,39 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.model.detector import PearDetector, ModelConfig, DetectionResult
 from src.utils.exceptions import ModelError
 
-from configs import *
+# from configs import *
+
+MODEL_PATH = "../weights"
+MODEL_DEFAULT = "efficientnetb3_512_version2.pth"
+IMG_PATH = "./test_images"
+CLASSES = ["normal", "defect_type_1", "defect_type_2", "defect_type_3",
+           "defect_type_4", "defect_type_5", "defect_type_6", "defect_type_7"]
+CONFIDENCE_THRESHOLD = 0.5
+LIST_IMAGES_TEST = [
+    "1.jpg",
+    "2.jpg",
+    "3.jpg",
+    "4.jpg",
+    "5.jpg",
+    "6.jpg",
+    "7.jpg",
+    "8.jpg",
+    "9.jpg",
+    "10.jpg",
+    "11.jpg",
+    "12.jpg",
+    "13.jpg",
+    "14.jpg",
+    "15.jpg",
+    "16.jpg",
+    "17.jpg",
+    "18.jpg",
+    "19.jpg",
+    "20.jpg",
+    "21.jpg",
+    "22.jpg",
+    "23.jpg",
+]
 
 
 class TestPearDetector:
@@ -139,6 +171,7 @@ class TestPearDetector:
         assert isinstance(result.is_normal, int)
         assert 0 <= result.confidence <= 1.0
 
+
     @pytest.mark.asyncio
     async def test_empty_image(self, detector):
         empty_image = np.zeros((640, 640, 3), dtype=np.uint8)
@@ -162,3 +195,14 @@ class TestPearDetector:
         result = await detector.inference(img_path)
         assert isinstance(result, DetectionResult)
         assert isinstance(result.is_normal, int)
+
+ 
+    @pytest.mark.asyncio
+    async def test_inference_on_all_images(self, detector, test_image_paths):
+        for p in test_image_paths:
+            img = cv2.imread(str(p))
+            assert img is not None
+            result = await detector.detect(img)
+            assert isinstance(result, DetectionResult)
+            assert isinstance(result.is_normal, int)
+            assert 0.0 <= result.confidence <= 1.0

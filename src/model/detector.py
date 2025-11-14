@@ -3,7 +3,8 @@ import numpy as np
 import logging
 import cv2
 import os
-from src.model.wrapperYOLO import PearModel
+# from src.model.wrapperYOLO import PearModel
+from src.model.pear_model import PearModel
 from typing import Optional
 from src.utils.exceptions import ModelError, InferenceError
 from src.utils.visualization import save_predictions_image
@@ -81,19 +82,16 @@ class PearDetector:
             # Uncomment to run Debug: Save image with predictions
             # await save_predictions_image(image, predictions)
 
-            if len(predictions) == 0:  # No detections
-                return DetectionResult(
+            return DetectionResult(
                     error=Error(non_detect=True),
-                    is_normal=1,  # No detection usually means 1
+                    is_normal=-1,
                     confidence=0.0,
                     bbox=None
-                )
-            else:
-                return DetectionResult(
+                ) if result == -1 else DetectionResult(
                     error=Error(),
-                    is_normal=int(result),  # Defective
-                    confidence=float(predictions[0][5]),
-                    bbox=tuple(predictions[0][:4])
+                    is_normal=int(result),  # class index
+                    confidence=float(predictions[4]),
+                    bbox=tuple(predictions[:4])
                 )
 
         except Exception as e:
