@@ -84,7 +84,7 @@ class PearDetector:
 
             return DetectionResult(
                     error=Error(non_detect=True),
-                    is_normal=-1,
+                    is_normal=0,
                     confidence=0.0,
                     bbox=None
                 ) if result == -1 else DetectionResult(
