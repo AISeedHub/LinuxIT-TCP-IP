@@ -7,10 +7,9 @@ server:
   encoding: "utf-8"
 
 model:
-  model_path: efficientnetb3_512_version2.pth
-  #model_path: C:\Users\IE\Downloads\model (6).pth
+  model_path: efficientnetb3_512_version2.pth  # D:\model (8).pth 
   preprocessor_path: best-2cls.pt
-  img_path: "test_img/normal0"
+  img_path: D:\linuxit\정상
   confidence_threshold: 0.5
   img_size: 640
   num_classes: 8

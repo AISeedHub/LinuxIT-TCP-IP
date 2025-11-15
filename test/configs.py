@@ -9,7 +9,7 @@ m = cfg["model"]
 BASE_DIR = os.path.dirname(YAML_PATH)
 
 # classifier
-MODEL_PATH = os.path.dirname(m["model_path"]) if os.path.isabs(m["model_path"]) else os.path.normpath(os.path.join(BASE_DIR, m["model_path"]))
+MODEL_PATH = os.path.dirname(m["model_path"]) 
 MODEL_DEFAULT = os.path.basename(m["model_path"])
 
 # preprocessor

@@ -243,11 +243,7 @@ class PearModel:
                     logits = logits.unsqueeze(0)
                 probs = torch.softmax(logits, dim=1)[0] # (num_classes,)
 
-            normal_idx = 0              # if you already set self.normal_class_index, use that instead
-            alpha = 2.0                 # tuning parameter: 1.2~2.0 is common; increase to reduce FP
-            probs[normal_idx] = probs[normal_idx] * alpha
-            probs = probs / probs.sum() # re-normalize
-            #self.logger.log(f"probs: {probs}", level="INFO")
+
             class_idx = int(torch.argmax(probs).item())
 
             # Log predicted class index
