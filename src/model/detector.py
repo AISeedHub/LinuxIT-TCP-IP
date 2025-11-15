@@ -81,7 +81,7 @@ class PearDetector:
 
             # Uncomment to run Debug: Save image with predictions
             # await save_predictions_image(image, predictions)
-
+            # is_normal = 0 for non detect sample or normal class and > 0 for defect classes
             return DetectionResult(
                     error=Error(non_detect=True),
                     is_normal=0,

@@ -5,6 +5,7 @@ from typing import Optional, Tuple
 @dataclass
 class ModelConfig:
     model_path: str
+    preprocessor_path: str
     img_path: str
     confidence_threshold: float = 0.9
     device: str = 'cuda' if torch.cuda.is_available() else 'cpu'

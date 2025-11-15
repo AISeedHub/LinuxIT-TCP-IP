@@ -15,34 +15,20 @@ from src.utils.exceptions import ModelError
 
 MODEL_PATH = "../weights"
 MODEL_DEFAULT = "efficientnetb3_512_version2.pth"
+PREPROCESSOR_DEFAULT = "best-2cls.pt"
 IMG_PATH = "./test_images"
 CLASSES = ["normal", "defect_type_1", "defect_type_2", "defect_type_3",
            "defect_type_4", "defect_type_5", "defect_type_6", "defect_type_7"]
 CONFIDENCE_THRESHOLD = 0.5
 LIST_IMAGES_TEST = [
-    "1.jpg",
-    "2.jpg",
-    "3.jpg",
-    "4.jpg",
-    "5.jpg",
-    "6.jpg",
-    "7.jpg",
-    "8.jpg",
-    "9.jpg",
-    "10.jpg",
-    "11.jpg",
-    "12.jpg",
-    "13.jpg",
-    "14.jpg",
-    "15.jpg",
-    "16.jpg",
-    "17.jpg",
-    "18.jpg",
-    "19.jpg",
-    "20.jpg",
-    "21.jpg",
-    "22.jpg",
-    "23.jpg",
+    "0/21_700005830334(20250924_105905)-0.jpg",
+    "1/419_700005830339(20250924_131611)-0.jpg",
+    "2/669_700005830333(20250924_134610)-0.jpg",
+    "3/729_700005830339(20250924_135313)-0.jpg",
+    "4/697_700005830339(20250924_134939)-0.jpg",
+    "5/584_700005830339(20250924_133454)-0.jpg",
+    "6/1913_700005830333(20250924_161113)-0.jpg",
+    "7/1136_700005830334(20250924_143648)-0.jpg"
 ]
 
 
@@ -57,6 +43,7 @@ class TestPearDetector:
     def detector(self):
         config = ModelConfig(
             model_path=os.path.join(MODEL_PATH, MODEL_DEFAULT),
+            preprocessor_path=os.path.join(MODEL_PATH, PREPROCESSOR_DEFAULT),
             classes=CLASSES,
             img_path=IMG_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD
@@ -206,3 +193,4 @@ class TestPearDetector:
             assert isinstance(result, DetectionResult)
             assert isinstance(result.is_normal, int)
             assert 0.0 <= result.confidence <= 1.0
+

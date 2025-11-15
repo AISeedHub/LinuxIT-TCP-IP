@@ -50,9 +50,9 @@ class PearModel:
             self.model.eval()
 
             # check existence of preprocessor model
-            if os.path.exists("../weights/best-2cls.pt"):
+            if os.path.exists(config.preprocessor_path):
 
-                self.preprocessor = YOLO("../weights/best-2cls.pt", task="detect")
+                self.preprocessor = YOLO(config.preprocessor_path, task="detect")
                 self.preprocessor.to(self.device)
                 self.preprocessor.eval()
             else:
