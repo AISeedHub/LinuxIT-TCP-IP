@@ -234,6 +234,10 @@ class PearModel:
         probs = probs / probs.sum() # re-normalize confidences of normal class
    
         class_idx = int(torch.argmax(probs).item())
+
+        if class_idx == 6: # treat class 6 as normal class
+            class_idx = 0 
+
         return class_idx
 
     def __inference(self, img: np.ndarray) -> Tuple[int, np.ndarray]:
