@@ -7,6 +7,7 @@ import numpy as np
 import time
 import sys
 from PIL import Image
+import cv2
 import os
 
 from src.model import ModelConfig
@@ -22,6 +23,65 @@ class Logger:
         sys.stdout.flush()
 
 
+def find_pear_bounding_box(image: np.ndarray) -> np.ndarray:
+    """
+    Find bounding box of pear objects using color detection (yellow tones).
+    
+    Args:
+        image_path: Path to the input image
+    
+    Returns:
+        tuple: (bounding_boxes, confidence)
+    """
+    # Read image
+ 
+    # Convert BGR to HSV for better color detection
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    
+    # Define range for yellow color (pear color)
+    # Yellow hue range in HSV
+    lower_yellow1 = np.array([15, 50, 50])   # Light yellow
+    upper_yellow1 = np.array([35, 255, 255]) # Dark yellow
+    
+    # Create mask for yellow colors
+    mask1 = cv2.inRange(hsv, lower_yellow1, upper_yellow1)
+    
+    # Also check for greenish-yellow (some pears)
+    lower_yellow2 = np.array([35, 40, 40])   # Green-yellow
+    upper_yellow2 = np.array([50, 255, 255]) # Yellow-green
+    mask2 = cv2.inRange(hsv, lower_yellow2, upper_yellow2)
+    
+    # Combine masks
+    mask = cv2.bitwise_or(mask1, mask2)
+    
+    # Apply morphological operations to clean up the mask
+    kernel = np.ones((5, 5), np.uint8)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+    
+    # Apply median blur to reduce noise
+    mask = cv2.medianBlur(mask, 5)
+    
+    # Find contours
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+    bounding_boxes = []
+  
+    imgh, imgw = image.shape[:2]
+    # Filter contours by area and aspect ratio
+    for contour in contours:
+        area = cv2.contourArea(contour)
+        
+        # Filter small areas
+        if area > (imgh * imgw * 0.3):  # Minimum area threshold
+            # Get bounding rectangle
+            x, y, w, h = cv2.boundingRect(contour)
+            
+            # Filter by aspect ratio (pears are usually taller than wide)
+            aspect_ratio = w / h
+            if 0.3 <= aspect_ratio <= 2.0:  # Reasonable aspect ratio for pears
+                bounding_boxes.append((x, y, x + w, y + h))
+    return bounding_boxes
 class PearModel:
     """
     A class for detecting pears and their defects using a YOLO model.
@@ -56,7 +116,8 @@ class PearModel:
                 self.preprocessor.to(self.device)
                 self.preprocessor.eval()
             else:
-                raise FileNotFoundError("Preprocessor model file not found.")
+                self.preprocessor = find_pear_bounding_box
+                self.logger.log("Preprocessor model file not found. Using color-based detection instead.", "WARNING")
             
             self.names = config.classes
             self.confidence = config.confidence_threshold
@@ -94,18 +155,29 @@ class PearModel:
                     Shape: (N, 5) → [x1, y1, x2, y2, cls]
         """
         try:
-            results = self.preprocessor.predict(img)
-            # Extract bounding boxes, classes, and scores
-            bboxes = results[0].boxes.xyxy.cpu().numpy()
-            classes = results[0].boxes.cls.cpu().numpy()
-            scores = results[0].boxes.conf.cpu().numpy()
-            # Filter results based on confidence threshold
-            mask = scores >= conf
-            bboxes = bboxes[mask]
-            classes = classes[mask]
-            scores = scores[mask]
+            if isinstance(self.preprocessor, YOLO):
+                results = self.preprocessor.predict(img, conf=conf)
+                # Extract bounding boxes, classes, and scores
+                bboxes = results[0].boxes.xyxy.cpu().numpy()
+                classes = results[0].boxes.cls.cpu().numpy()
+                scores = results[0].boxes.conf.cpu().numpy()
+                # Filter results based on confidence threshold
+                mask = scores >= conf
+                bboxes = bboxes[mask]
+                classes = classes[mask]
+                scores = scores[mask]
 
-            return np.hstack((bboxes, classes[:, None], scores[:, None]))
+                return np.hstack((bboxes, classes[:, None], scores[:, None]))
+            else:
+                boxes = self.preprocessor(img)
+                if len(boxes) == 0:
+                    return np.array([])
+                boxes = np.array(boxes)
+                classes = np.zeros((boxes.shape[0], 1))  # all class 0
+                scores = np.ones((boxes.shape[0], 1))   # dummy confidence
+
+                return np.hstack((boxes, classes, scores))
+            
         except Exception as e:
             self.logger.log(f"Detection error: {e}", level="ERROR")
             return np.array([])
@@ -158,8 +230,8 @@ class PearModel:
             #     logits = logits.unsqueeze(0)
             probs = torch.softmax(logits, dim=1)[0] # (num_classes,)
 
-        # probs[0] = probs[0] * 2.0
-        # probs = probs / probs.sum() # re-normalize confidences of normal class
+        probs[0] = probs[0] * 2.0
+        probs = probs / probs.sum() # re-normalize confidences of normal class
    
         class_idx = int(torch.argmax(probs).item())
         return class_idx
