@@ -89,7 +89,7 @@ class RequestProcessor:
                 raise ValidationError("Model change request must contain exactly one model name")
             self.validator.validate_file_list(
                 request_data,
-                allowed_extensions=['.pt']
+                allowed_extensions=['.pt', '.pth']
             )
 
         # Directory change request

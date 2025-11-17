@@ -13,9 +13,10 @@ class DownloadHandler(BaseHandler):
 
         try:
             url = request["request_data"][0]
+            model_folder = self.model.config.model_path.rsplit('/', 1)[0] + '/'
             wget.download(
                 url,
-                out=self.model.config["DIR_MODEL_DETECTION"]
+                out=model_folder
             )
             return self.create_response([{"result": 2}])  # success
         except Exception as e:
