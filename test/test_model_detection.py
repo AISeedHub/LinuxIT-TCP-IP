@@ -11,7 +11,25 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.model.detector import PearDetector, ModelConfig, DetectionResult
 from src.utils.exceptions import ModelError
 
-from configs import *
+# from configs import *
+
+MODEL_PATH = "../weights"
+MODEL_DEFAULT = "efficientnetb3_512_version2.pth"
+PREPROCESSOR_DEFAULT = "best-2cls.pt"
+IMG_PATH = "./test_images"
+CLASSES = ["normal", "defect_type_1", "defect_type_2", "defect_type_3",
+           "defect_type_4", "defect_type_5", "defect_type_6", "defect_type_7"]
+CONFIDENCE_THRESHOLD = 0.5
+LIST_IMAGES_TEST = [
+    "0/21_700005830334(20250924_105905)-0.jpg",
+    "1/419_700005830339(20250924_131611)-0.jpg",
+    "2/669_700005830333(20250924_134610)-0.jpg",
+    "3/729_700005830339(20250924_135313)-0.jpg",
+    "4/697_700005830339(20250924_134939)-0.jpg",
+    "5/584_700005830339(20250924_133454)-0.jpg",
+    "6/1913_700005830333(20250924_161113)-0.jpg",
+    "7/1136_700005830334(20250924_143648)-0.jpg"
+]
 
 
 class TestPearDetector:
@@ -25,6 +43,7 @@ class TestPearDetector:
     def detector(self):
         config = ModelConfig(
             model_path=os.path.join(MODEL_PATH, MODEL_DEFAULT),
+            preprocessor_path=os.path.join(MODEL_PATH, PREPROCESSOR_DEFAULT),
             classes=CLASSES,
             img_path=IMG_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD
@@ -139,6 +158,7 @@ class TestPearDetector:
         assert isinstance(result.is_normal, int)
         assert 0 <= result.confidence <= 1.0
 
+
     @pytest.mark.asyncio
     async def test_empty_image(self, detector):
         empty_image = np.zeros((640, 640, 3), dtype=np.uint8)
@@ -162,3 +182,15 @@ class TestPearDetector:
         result = await detector.inference(img_path)
         assert isinstance(result, DetectionResult)
         assert isinstance(result.is_normal, int)
+
+ 
+    @pytest.mark.asyncio
+    async def test_inference_on_all_images(self, detector, test_image_paths):
+        for p in test_image_paths:
+            img = cv2.imread(str(p))
+            assert img is not None
+            result = await detector.detect(img)
+            assert isinstance(result, DetectionResult)
+            assert isinstance(result.is_normal, int)
+            assert 0.0 <= result.confidence <= 1.0
+

@@ -51,10 +51,10 @@ class ModelHandler(BaseHandler):
             model_name = request["request_data"][0]  # 'model.pt'
             # get the root directory of the model self.model.config.model_path = '/root/aiseed/models/best.pt'
             root_dir = self.model.config.model_path[:-len(self.model.config.model_path.split("/")[-1])]
-            new_model_path = root_dir + '/' + model_name
+            new_model_path = root_dir + model_name
 
             if not verify_directory(new_model_path):
-                raise ValidationError("Invalid directory provided")
+                raise ValidationError(f"Invalid directory provided for model: {new_model_path}")
 
             self.model.change_model(new_model_path)
             return self.create_response([{

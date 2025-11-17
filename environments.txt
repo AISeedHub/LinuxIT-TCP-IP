@@ -6,3 +6,4 @@ wget
 ultralytics
 pytest-asyncio
 pytest
+timm

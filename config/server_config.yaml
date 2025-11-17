@@ -7,7 +7,8 @@ server:
   encoding: "utf-8"
 
 model:
-  model_path: "C:/Users/Andrew/Desktop/LinuxIT-TCP-IP/weights/best-2cls.pt"
+  model_path: "../weights/efficientnetb3_512_version2.pth"
+  preprocessor_path: "../weights/best-2cls.pt"
   img_path: "../test_photos"
   confidence_threshold: 0.9
   img_size: 640
