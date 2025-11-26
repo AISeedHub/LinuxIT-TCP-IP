@@ -1,0 +1,16 @@
+[project]
+name = "linuxit-tcp-ip"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "opencv-python>=4.11.0.86",
+    "pytest>=9.0.1",
+    "pytest-asyncio>=0.23.0",
+    "timm>=1.0.22",
+    "ultralytics>=8.3.232",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

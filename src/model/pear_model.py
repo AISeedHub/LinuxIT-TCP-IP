@@ -235,8 +235,8 @@ class PearModel:
    
         class_idx = int(torch.argmax(probs).item())
 
-        if class_idx == 6: # treat class 6 as normal class
-            class_idx = 0 
+        # if class_idx == 6: # treat class 6 as normal class
+        #     class_idx = 0 
 
         return class_idx
 

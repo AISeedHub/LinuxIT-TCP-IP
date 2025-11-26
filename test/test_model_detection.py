@@ -14,9 +14,9 @@ from src.utils.exceptions import ModelError
 # from configs import *
 
 MODEL_PATH = "../weights"
-MODEL_DEFAULT = "efficientnetb3_512_version1.pth"
-PREPROCESSOR_DEFAULT = "dummy.pt"
-IMG_PATH = "./test_images"
+MODEL_DEFAULT = "efficientnetb3_512_version3.pth"
+PREPROCESSOR_DEFAULT = "best-2cls.pt"
+IMG_PATH = "test_images_linuxit"
 CLASSES = ["normal", "defect_type_1", "defect_type_2", "defect_type_3",
            "defect_type_4", "defect_type_5", "defect_type_6", "defect_type_7"]
 CONFIDENCE_THRESHOLD = 0.5
@@ -201,8 +201,10 @@ class TestPearDetector:
             img = cv2.imread(str(p))
             assert img is not None
             result = await detector.detect(img)
+            # write result and image path to text file
+            with open("test_inference_results.txt", "a") as f:
+                f.write(f"{p}: is_normal={result.is_normal}\n")
             assert isinstance(result, DetectionResult)
             assert isinstance(result.is_normal, int)
-            # assert result.is_normal == int(cls_index)
             assert 0.0 <= result.confidence <= 1.0
 
