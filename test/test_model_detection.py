@@ -1,3 +1,4 @@
+import glob
 import os
 import sys
 import time
@@ -14,22 +15,29 @@ from src.utils.exceptions import ModelError
 # from configs import *
 
 MODEL_PATH = "../weights"
-MODEL_DEFAULT = "efficientnetb3_512_version2.pth"
+MODEL_DEFAULT = "efficientnetb3_512_version3.pth"
 PREPROCESSOR_DEFAULT = "best-2cls.pt"
-IMG_PATH = "./test_images"
+IMG_PATH = "test_images_linuxit"
 CLASSES = ["normal", "defect_type_1", "defect_type_2", "defect_type_3",
            "defect_type_4", "defect_type_5", "defect_type_6", "defect_type_7"]
 CONFIDENCE_THRESHOLD = 0.5
-LIST_IMAGES_TEST = [
-    "0/21_700005830334(20250924_105905)-0.jpg",
-    "1/419_700005830339(20250924_131611)-0.jpg",
-    "2/669_700005830333(20250924_134610)-0.jpg",
-    "3/729_700005830339(20250924_135313)-0.jpg",
-    "4/697_700005830339(20250924_134939)-0.jpg",
-    "5/584_700005830339(20250924_133454)-0.jpg",
-    "6/1913_700005830333(20250924_161113)-0.jpg",
-    "7/1136_700005830334(20250924_143648)-0.jpg"
-]
+
+# Load all image from folder test_images
+
+
+LIST_IMAGES_TEST = glob.glob(f"{IMG_PATH}/**/*.jpg", recursive=True)
+
+
+# LIST_IMAGES_TEST = [
+#     "0/21_700005830334(20250924_105905)-0.jpg",
+#     "1/419_700005830339(20250924_131611)-0.jpg",
+#     "2/669_700005830333(20250924_134610)-0.jpg",
+#     "3/729_700005830339(20250924_135313)-0.jpg",
+#     "4/697_700005830339(20250924_134939)-0.jpg",
+#     "5/584_700005830339(20250924_133454)-0.jpg",
+#     "6/1913_700005830333(20250924_161113)-0.jpg",
+#     "7/1136_700005830334(20250924_143648)-0.jpg"
+# ]
 
 
 class TestPearDetector:
@@ -186,7 +194,7 @@ class TestPearDetector:
  
     @pytest.mark.asyncio
     async def test_inference_on_all_images(self, detector, test_image_paths):
-        for p in test_image_paths:
+        for p in LIST_IMAGES_TEST:
             img = cv2.imread(str(p))
             assert img is not None
             result = await detector.detect(img)
