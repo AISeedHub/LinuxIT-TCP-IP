@@ -14,22 +14,33 @@ from src.utils.exceptions import ModelError
 # from configs import *
 
 MODEL_PATH = "../weights"
-MODEL_DEFAULT = "efficientnetb3_512_version2.pth"
-PREPROCESSOR_DEFAULT = "best-2cls.pt"
+MODEL_DEFAULT = "efficientnetb3_512_version1.pth"
+PREPROCESSOR_DEFAULT = "dummy.pt"
 IMG_PATH = "./test_images"
 CLASSES = ["normal", "defect_type_1", "defect_type_2", "defect_type_3",
            "defect_type_4", "defect_type_5", "defect_type_6", "defect_type_7"]
 CONFIDENCE_THRESHOLD = 0.5
-LIST_IMAGES_TEST = [
-    "0/21_700005830334(20250924_105905)-0.jpg",
-    "1/419_700005830339(20250924_131611)-0.jpg",
-    "2/669_700005830333(20250924_134610)-0.jpg",
-    "3/729_700005830339(20250924_135313)-0.jpg",
-    "4/697_700005830339(20250924_134939)-0.jpg",
-    "5/584_700005830339(20250924_133454)-0.jpg",
-    "6/1913_700005830333(20250924_161113)-0.jpg",
-    "7/1136_700005830334(20250924_143648)-0.jpg"
-]
+
+# read images from test_images folder by os.walk
+
+
+LIST_IMAGES_TEST = []
+for root, dirs, files in os.walk(IMG_PATH):
+    for file in files:
+        if file.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.gif')):
+            relative_path = os.path.relpath(os.path.join(root, file), IMG_PATH)
+            LIST_IMAGES_TEST.append(relative_path)
+
+# LIST_IMAGES_TEST = [
+#     "0/21_700005830334(20250924_105905)-0.jpg",
+#     "1/419_700005830339(20250924_131611)-0.jpg",
+#     "2/669_700005830333(20250924_134610)-0.jpg",
+#     "3/729_700005830339(20250924_135313)-0.jpg",
+#     "4/697_700005830339(20250924_134939)-0.jpg",
+#     "5/584_700005830339(20250924_133454)-0.jpg",
+#     "6/1913_700005830333(20250924_161113)-0.jpg",
+#     "7/1136_700005830334(20250924_143648)-0.jpg"
+# ]
 
 
 class TestPearDetector:
@@ -192,5 +203,6 @@ class TestPearDetector:
             result = await detector.detect(img)
             assert isinstance(result, DetectionResult)
             assert isinstance(result.is_normal, int)
+            # assert result.is_normal == int(cls_index)
             assert 0.0 <= result.confidence <= 1.0
 
