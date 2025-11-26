@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 PyYAML
 opencv-python
 albumentations
@@ -6,3 +7,14 @@ wget
 ultralytics
 pytest-asyncio
 pytest
+=======
+PyYAML
+opencv-python
+albumentations
+numpy
+wget
+ultralytics
+pytest-asyncio
+pytest
+timm
+>>>>>>> origin/main
