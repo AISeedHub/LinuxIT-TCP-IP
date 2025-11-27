@@ -158,8 +158,8 @@ class PearModel:
             #     logits = logits.unsqueeze(0)
             probs = torch.softmax(logits, dim=1)[0] # (num_classes,)
 
-        probs[0] = probs[0] * 2.0
-        probs = probs / probs.sum() # re-normalize confidences of normal class
+        # probs[0] = probs[0] * 2.0
+        # probs = probs / probs.sum() # re-normalize confidences of normal class
    
         class_idx = int(torch.argmax(probs).item())
         return class_idx
