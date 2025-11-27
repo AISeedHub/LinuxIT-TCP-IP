@@ -193,7 +193,7 @@ class TestPearDetector:
 
  
     @pytest.mark.asyncio
-    async def test_inference_on_all_images(self, detector, test_image_paths):
+    async def test_inference_on_all_images(self, detector):
         for p in LIST_IMAGES_TEST:
             img = cv2.imread(str(p))
             assert img is not None
